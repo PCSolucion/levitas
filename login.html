@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Levitas - Iniciar Sesión</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M10 50 L30 50 L40 10 L60 90 L70 50 L90 50' fill='none' stroke='%237c3aed' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+            <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7c3aed",
+                        "secondary": "#7c3aed",
+                        "accent": "#7c3aed",
+                        "background-light": "#0a0a0f",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#161622",
+                        "surface-light": "#161622",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.6); }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: #0a0a0f;
+            font-family: "Space Grotesk", sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: "Outfit", sans-serif;
+        }
+
+        /* Dark solid cards like Superconscious dashboard */
+        .glass-panel {
+            background: #161622 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 1rem !important;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(139, 92, 246, 0.15) !important;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Glow text for highlighted items */
+        .super-glow {
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+        }
+        
+        /* Primary buttons - purple gradient */
+        button.bg-primary,
+        .bg-primary {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3) !important;
+            border: none !important;
+            transition: all 0.3s ease !important;
+        }
+        button.bg-primary:hover,
+        .bg-primary:hover {
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.5) !important;
+            transform: translateY(-1px);
+        }
+
+        /* Timer circle glow (purple halo from screenshots) */
+        #dash-circle-progress, .text-[#a78bfa] {
+            filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
+        }
+
+        /* Progress bars matching screenshots */
+        .bg-gradient-to-r {
+            background: linear-gradient(90deg, #7c3aed, #a78bfa) !important;
+        }
+
+        /* Subtle tag/badge styling */
+        .bg-green-100 { background: rgba(34, 197, 94, 0.15) !important; }
+        .text-green-700, .text-green-500 { color: #4ade80 !important; }
+        .bg-red-100 { background: rgba(239, 68, 68, 0.15) !important; }
+        .text-red-700, .text-red-500 { color: #f87171 !important; }
+
+        /* Sidebar styling */
+        #mobile-sidebar {
+            background: #0d0d16 !important;
+            border-right: 1px solid rgba(255,255,255,0.04) !important;
+        }
+
+        /* Nav links */
+        #mobile-sidebar nav a {
+            color: rgba(255,255,255,0.45);
+            transition: all 0.2s ease;
+            border-radius: 0.75rem;
+        }
+        #mobile-sidebar nav a:hover {
+            color: rgba(255,255,255,0.8);
+            background: rgba(139, 92, 246, 0.08);
+        }
+        #mobile-sidebar nav a.bg-secondary\/10 {
+            background: rgba(139, 92, 246, 0.12) !important;
+            color: #a78bfa !important;
+        }
+
+        /* Input styling */
+        input, select, textarea {
+            background: #12121e !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #e2e8f0 !important;
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(139, 92, 246, 0.5) !important;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1) !important;
+        }
+
+        /* Bottom mobile nav */
+        .fixed.bottom-11, .fixed.bottom-0 {
+            background: #0d0d16 !important;
+            border-top: 1px solid rgba(255,255,255,0.04) !important;
+        }
+
+        /* SVG Circle timer - purple glow */
+        svg circle.text-[#a78bfa] {
+            stroke: #7c3aed !important;
+        }
+
+        /* Cyan/water elements keep their identity but muted */
+        .bg-cyan-500 {
+            background: #06b6d4 !important;
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;
+        }
+
+        /* Chart bars */
+        .bg-accent\/40 { background: rgba(124, 58, 237, 0.25) !important; }
+        .bg-accent { background: #7c3aed !important; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        main > header, 
+        main > .grid {
+            animation: fadeInUp 0.6s ease-out both;
+        }
+        main > .grid { animation-delay: 0.15s; }
+
+        /* Protocol button cards */
+        .protocol-btn {
+            background: #161622 !important;
+            border-color: rgba(255,255,255,0.06) !important;
+            color: rgba(255,255,255,0.5) !important;
+        }
+        .protocol-btn:hover {
+            border-color: rgba(139, 92, 246, 0.3) !important;
+        }
+        
+        /* Ensure all content sits above the particle canvas */
+        #mobile-sidebar, main, .fixed {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-display flex items-center justify-center min-h-screen p-4 overflow-hidden relative">
+    
+    <!-- Animated background blobs -->
+    <div class="absolute top-0 -left-4 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-0 -right-4 w-72 h-72 bg-secondary/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+    
+    <div class="max-w-md w-full glass-effect rounded-3xl p-8 md:p-10 shadow-2xl relative z-10 border border-white/5">
+        <div class="text-center mb-10">
+            <div class="inline-flex p-3 rounded-2xl bg-primary/10 mb-4 border border-primary/20">
+                <span class="material-symbols-outlined text-primary text-4xl">vital_signs</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">Bienvenido a <span class="gradient-text">Levitas</span></h1>
+            <p class="text-slate-400">Tu camino hacia un ayuno intermitente inteligente y saludable.</p>
+        </div>
+
+        <div class="space-y-6">
+            <div class="space-y-4">
+                <button id="btn-google" class="w-full h-14 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" alt="Google">
+                    Continuar con Google
+                </button>
+            </div>
+
+            <div id="auth-error" class="hidden text-red-400 text-sm text-center bg-red-400/10 py-3 rounded-xl border border-red-400/20">
+                Error al iniciar sesión.
+            </div>
+        </div>
+        
+        <p class="mt-10 text-center text-xs text-gray-400">
+            Al continuar, aceptas nuestros <a href="#" class="underline">Términos de Servicio</a> y <a href="#" class="underline">Política de Privacidad</a>.
+        </p>
+    </div>
+
+    <script type="module" src="auth-logic.js"></script>
+</body>
+</html>

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<script type="module" src="auth-guard.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Levitas - Temporizador de Ayuno</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M10 50 L30 50 L40 10 L60 90 L70 50 L90 50' fill='none' stroke='%237c3aed' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7c3aed",
+                        "secondary": "#7c3aed",
+                        "accent": "#7c3aed",
+                        "background-light": "#0a0a0f",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#161622",
+                        "surface-light": "#161622",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.6); }
+        
+        * { box-sizing: border-box; }
+        
+        /* Body and Base Typography */
+        body {
+            background-color: #0a0a0f;
+            font-family: "Space Grotesk", sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f 0%, #0d0d16 50%, #0a0a0f 100%);
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
+            font-family: "Outfit", sans-serif;
+        }
+
+        /* Replicated Premium Dashboard Cards */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            border-radius: 1.25rem !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-color: rgba(124, 58, 237, 0.3) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(124, 58, 237, 0.1) !important;
+        }
+
+        /* Accent Color Effect (Glow Blobs) */
+        .accent-glow {
+            position: absolute;
+            width: 154px;
+            height: 154px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-top-right { top: -77px; right: -77px; }
+        .glow-bottom-left { bottom: -77px; left: -77px; }
+
+        /* Section Badges */
+        .section-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(167, 139, 250, 0.1) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 20px;
+            color: #a78bfa;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        /* Stat highlights */
+        .stat-highlight {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        /* Glowing accents */
+        .super-glow {
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Heartbeat Animation for Logo */
+        @keyframes heartPulse {
+            0% { transform: scale(1); opacity: 1; }
+            15% { transform: scale(1.15); opacity: 0.8; }
+            30% { transform: scale(1); opacity: 1; }
+            45% { transform: scale(1.15); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-heartbeat {
+            animation: heartPulse 2.5s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
+        @keyframes ekgTrace {
+            0% { 
+                clip-path: inset(0 100% 0 0); 
+                opacity: 0;
+            }
+            100% { 
+                clip-path: inset(0 0 0 0);
+                opacity: 1;
+            }
+        }
+
+        .animate-vital {
+            animation: ekgTrace 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            display: inline-block;
+        }
+
+        .premium-icon-box {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(167, 139, 250, 0.1) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+        }
+
+        /* Timer circle glow */
+        #timer-progress-circle, .text-\[#a78bfa\] {
+            filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
+        }
+
+        /* Existing style cleanups */
+        .bg-green-100 { background: rgba(34, 197, 94, 0.15) !important; }
+        .text-green-700, .text-green-500 { color: #4ade80 !important; }
+        .bg-red-100 { background: rgba(239, 68, 68, 0.15) !important; }
+        .text-red-700, .text-red-500 { color: #f87171 !important; }
+
+
+        /* Sidebar New Style (CodePen Replicated) */
+        #mobile-sidebar {
+            background: linear-gradient(180deg, rgba(13, 13, 22, 0.95) 0%, rgba(10, 10, 15, 0.98) 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+            position: relative;
+        }
+
+        #mobile-sidebar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -1px;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(124, 58, 237, 0.5), transparent);
+            z-index: 10;
+        }
+
+        /* Custom Circadian Tooltip */
+        .circadian-tooltip {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            width: 240px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px border-white/10;
+            padding: 12px;
+            border-radius: 16px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(124, 58, 237, 0.1);
+            z-index: 50;
+        }
+
+        .circadian-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
+        }
+
+        #circadian-sync-container:hover .circadian-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+                .tab-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            background: transparent;
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            border: 1px solid transparent;
+            text-decoration: none !important;
+        }
+
+        .tab-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(167, 139, 250, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 12px;
+        }
+
+        .tab-btn::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%);
+            border-radius: 0 4px 4px 0;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn:hover {
+            transform: translateX(4px);
+        }
+
+        .tab-btn:hover::before {
+            opacity: 0.5;
+        }
+
+        .tab-btn.active {
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border-color: rgba(124, 58, 237, 0.15);
+        }
+
+        .tab-btn.active::before {
+            opacity: 1;
+        }
+
+        .tab-btn.active::after {
+            transform: translateY(-50%) scaleY(1);
+        }
+
+        .tab-btn .tab-icon {
+            position: relative;
+            z-index: 1;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .tab-btn.active .tab-icon {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .tab-btn .tab-icon span {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.4s ease;
+        }
+
+        .tab-btn.active .tab-icon span,
+        .tab-btn:hover .tab-icon span {
+            color: #fff;
+        }
+
+        .tab-btn .tab-text {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tab-btn .tab-title {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.4s ease;
+        }
+
+        .tab-btn.active .tab-title,
+        .tab-btn:hover .tab-title {
+            color: #fff;
+        }
+
+        .tab-btn .tab-subtitle {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            margin-top: 1px;
+            transition: color 0.4s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-btn.active .tab-subtitle {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-btn .tab-arrow {
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s ease;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tab-btn.active .tab-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Input styling */
+        input, select, textarea {
+            background: #12121e !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #e2e8f0 !important;
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(139, 92, 246, 0.5) !important;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1) !important;
+        }
+
+        /* Bottom mobile nav */
+        .fixed.bottom-11, .fixed.bottom-0 {
+            background: #0d0d16 !important;
+            border-top: 1px solid rgba(255,255,255,0.04) !important;
+        }
+
+        /* SVG Circle timer - purple glow */
+        svg circle.text-\[#a78bfa\] {
+            stroke: #7c3aed !important;
+        }
+
+        /* Cyan/water elements keep their identity but muted */
+        .bg-cyan-500 {
+            background: #06b6d4 !important;
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;
+        }
+
+        /* Chart bars */
+        .bg-accent\/40 { background: rgba(124, 58, 237, 0.25) !important; }
+        .bg-accent { background: #7c3aed !important; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        main > header, 
+        main > .grid {
+            animation: fadeInUp 0.6s ease-out both;
+        }
+        main > .grid { animation-delay: 0.15s; }
+
+        /* Protocol button cards */
+        .protocol-btn {
+            background: #161622 !important;
+            border-color: rgba(255,255,255,0.06) !important;
+            color: rgba(255,255,255,0.5) !important;
+        }
+        .protocol-btn:hover {
+            border-color: rgba(139, 92, 246, 0.3) !important;
+        }
+        
+        /* Ensure all content sits above the particle canvas */
+        #mobile-sidebar, main, .fixed {
+            position: relative;
+            z-index: 1;
+        }
+
+    </style>
+</head>
+<body class="bg-[#0a0a0f] font-display text-white dark:text-slate-100 min-h-screen flex overflow-hidden relative">
+<aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-surface-light dark:bg-background-dark border-r border-white/5 dark:border-white/10 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out flex flex-col h-screen">
+    <!-- El contenido del sidebar se inyecta dinámicamente desde auth-guard.js -->
+</aside>
+
+    <main class="flex-1 h-screen overflow-y-auto bg-[#0a0a0f] p-4 md:p-8 relative">
+        <div class="md:hidden flex items-center justify-between mb-4">
+            <a href="dashboard.html" class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-2xl font-bold">vital_signs</span>
+                <span class="text-xl font-bold text-white tracking-tight super-glow">Levitas</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-slate-200 dark:bg-surface-dark bg-cover bg-center border-2 border-white/5 dark:border-white/10"></div>
+                <button class="p-2 text-slate-400" onclick="document.getElementById('mobile-sidebar').classList.remove('-translate-x-full')">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="max-w-[1200px] mx-auto flex flex-col gap-10">
+            <!-- Header Section -->
+            <header class="pb-6 border-b border-white/5">
+                <div class="space-y-2">
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white">
+                        Tu <span class="text-primary super-glow">Temporizador</span>
+                    </h1>
+                    <p class="text-slate-500 text-lg font-medium">Gestiona tus periodos de ayuno y alimentación con precisión.</p>
+                </div>
+            </header>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Main Timer Column -->
+                <div class="lg:col-span-8 flex flex-col gap-8">
+                    <!-- Global Timer Card -->
+                    <div class="glass-panel p-8 md:p-12 flex flex-col items-center justify-center relative overflow-hidden min-h-[750px]">
+                        <div class="accent-glow glow-top-right opacity-30"></div>
+                        <div class="accent-glow glow-bottom-left opacity-30"></div>
+                        
+                        <!-- Active Timer State -->
+                        <div id="timer-active-content" class="w-full flex flex-col items-center">
+                            <!-- Top Status Row -->
+                            <div class="w-full max-w-2xl flex flex-wrap justify-center sm:justify-between items-center gap-4 mb-8 relative z-30 px-4">
+                                <div class="flex items-center gap-3 bg-white/[0.02] border border-white/5 py-2 px-4 rounded-2xl">
+                                    <div class="premium-icon-box !bg-primary/20 !size-7"><span class="material-symbols-outlined text-[14px]">bolt</span></div>
+                                    <span id="current-protocol-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Protocolo 16:8</span>
+                                </div>
+
+                                <div id="circadian-sync-container" class="opacity-0 transition-opacity duration-700 flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/[0.02] border border-white/5 cursor-help">
+                                    <span id="circadian-icon" class="material-symbols-outlined text-[14px] text-amber-400">dark_mode</span>
+                                    <span id="circadian-text" class="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">---</span>
+                                    <div id="circadian-tooltip-box" class="circadian-tooltip">Cargando...</div>
+                                </div>
+
+                                <div id="pb-challenge-container" class="opacity-0 transition-all duration-700 flex flex-col items-center sm:items-end gap-1 group cursor-default">
+                                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 group-hover:border-primary/30 transition-colors">
+                                        <span class="material-symbols-outlined text-[12px] text-primary">emoji_events</span>
+                                        <span id="pb-challenge-text" class="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Cargando Récord...</span>
+                                    </div>
+                                    <div id="pb-progress-bar-container" class="w-20 h-0.5 bg-white/5 rounded-full overflow-hidden opacity-50">
+                                        <div id="pb-progress-bar" class="h-full bg-primary transition-all duration-1000 w-0"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metabolic Phase Badge -->
+                            <div id="metabolic-state-container" class="mb-6 opacity-0 translate-y-2 transition-all duration-700 relative z-20">
+                                <div class="flex flex-col items-center">
+                                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+                                        <span class="relative flex h-2 w-2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                        </span>
+                                        <span id="metabolic-phase-title" class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Analizando...</span>
+                                    </div>
+                                    <p id="metabolic-phase-desc" class="mt-2 text-[9px] text-slate-600 font-bold uppercase tracking-widest text-center leading-relaxed">Sincronizando reloj biológico...</p>
+                                </div>
+                            </div>
+
+                            <div class="relative size-72 sm:size-80 flex items-center justify-center mb-10 z-10">
+                                <!-- Progress Ring -->
+                                <svg class="absolute inset-0 size-full transform -rotate-90">
+                                    <circle cx="50%" cy="50%" r="46%" stroke="rgba(255,255,255,0.03)" stroke-width="8" fill="transparent"></circle>
+                                    <circle id="timer-progress-circle" cx="50%" cy="50%" r="46%" stroke="#7c3aed" stroke-dasharray="283" stroke-dashoffset="283" stroke-linecap="round" stroke-width="8" fill="transparent" class="transition-all duration-1000" style="filter: drop-shadow(0 0 15px rgba(124, 58, 237, 0.5));"></circle>
+                                </svg>
+                                
+                                <div class="flex flex-col items-center text-center">
+                                    <h1 id="timer-display" class="text-6xl md:text-7xl font-black text-white stat-highlight tracking-tighter">00:00:00</h1>
+                                    <p id="timer-label" class="mt-4 text-slate-500 text-xs font-black uppercase tracking-[0.3em]">Tiempo Transcurrido</p>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Metrics Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-8 relative z-10 px-4">
+                                <!-- Metabolic Intensity Bar -->
+                                <div class="space-y-3 p-4 bg-white/[0.02] border border-white/5 rounded-[2rem] flex flex-col justify-center">
+                                    <div class="flex justify-between items-center px-1">
+                                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Intensidad Metabólica</span>
+                                        <span id="metabolic-intensity-pct" class="text-[8px] font-black text-primary uppercase">0%</span>
+                                    </div>
+                                    <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                        <div id="metabolic-intensity-bar" class="h-full bg-primary transition-all duration-1000 w-0 shadow-[0_0_10px_rgba(124,58,237,0.3)]"></div>
+                                    </div>
+                                    <p class="text-[7px] text-slate-600 font-bold uppercase tracking-tighter text-center">Tasa de optimización celular</p>
+                                </div>
+
+                                <!-- Fuel Simulator (Idea 14) -->
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="space-y-2 p-3 bg-white/[0.02] border border-white/5 rounded-[1.5rem] flex flex-col justify-center">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Glucógeno</span>
+                                            <span id="fuel-glycogen-pct" class="text-[7px] font-black text-amber-500 uppercase">100%</span>
+                                        </div>
+                                        <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <div id="fuel-glycogen-bar" class="h-full bg-amber-500 transition-all duration-1000 w-[100%] shadow-[0_0_8px_rgba(245,158,11,0.3)]"></div>
+                                        </div>
+                                        <span class="text-[6px] text-slate-600 font-bold block text-center uppercase">Azúcar</span>
+                                    </div>
+                                    <div class="space-y-2 p-3 bg-white/[0.02] border border-white/5 rounded-[1.5rem] flex flex-col justify-center">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Lípidos</span>
+                                            <span id="fuel-fat-pct" class="text-[7px] font-black text-emerald-500 uppercase">0%</span>
+                                        </div>
+                                        <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <div id="fuel-fat-bar" class="h-full bg-emerald-500 transition-all duration-1000 w-[0%] shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
+                                        </div>
+                                        <span class="text-[6px] text-slate-600 font-bold block text-center uppercase">Grasas</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="electrolyte-reminder" class="mb-8 w-full max-w-2xl bg-cyan-500/5 border border-cyan-500/20 p-4 rounded-[2rem] flex items-center gap-4 relative overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-700 mx-4">
+                                <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent"></div>
+                                <div class="premium-icon-box !bg-cyan-500/20 !border-cyan-500/30 !text-cyan-500 !size-8 relative z-10 shrink-0">
+                                    <span class="material-symbols-outlined text-[14px]">water_drop</span>
+                                </div>
+                                <div class="relative z-10">
+                                    <p class="text-[9px] font-bold text-white leading-tight">Tip de Biohacking: Añade sal mineral a tu agua para evitar fatiga.</p>
+                                </div>
+                            </div>
+
+                            <!-- Stats Strip -->
+                            <div class="grid grid-cols-3 gap-3 w-full max-w-2xl mb-8 z-10 px-4">
+                                <div class="flex flex-col items-center p-3 sm:p-4 rounded-[1.5rem] bg-white/[0.02] border border-white/5">
+                                    <span class="text-[8px] font-black text-slate-600 mb-1 uppercase tracking-widest">Iniciado</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="start-time-text" class="font-bold text-white text-sm">--:--</span>
+                                        <button id="btn-edit-start" class="hidden text-primary"><span class="material-symbols-outlined text-[12px]">edit</span></button>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center p-3 sm:p-4 rounded-[1.5rem] bg-white/[0.02] border border-white/5">
+                                    <span class="text-[8px] font-black text-slate-600 mb-1 uppercase tracking-widest">Objetivo</span>
+                                    <span id="goal-time-text" class="font-bold text-white text-sm">--:--</span>
+                                </div>
+                                <div class="flex flex-col items-center p-3 sm:p-4 rounded-[1.5rem] bg-white/[0.02] border border-white/5">
+                                    <span class="text-[8px] font-black text-slate-600 mb-1 uppercase tracking-widest">Estado</span>
+                                    <span id="status-text" class="font-black text-primary text-[8px] uppercase tracking-widest truncate">Inactivo</span>
+                                </div>
+                            </div>
+
+                            <button id="btn-timer-action" class="group relative w-full max-w-sm overflow-hidden py-5 bg-primary text-white font-black text-lg rounded-3xl shadow-2xl shadow-primary/30 transition-all active:scale-95 z-10 flex items-center justify-center gap-4">
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                <span id="action-icon" class="material-symbols-outlined text-2xl">play_circle</span>
+                                <span id="action-text">Iniciar Ayuno</span>
+                            </button>
+
+                            <!-- Mood & Hunger Controls (Ideas 12 & 13) -->
+                            <div id="fasting-controls" class="mt-8 w-full max-w-sm flex flex-col gap-4 opacity-0 pointer-events-none transition-all duration-700 translate-y-4">
+                                <!-- Mood Journal (Idea 12) -->
+                                <div class="glass-panel p-4 flex items-center justify-between border-white/5 bg-white/[0.01]">
+                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">¿Cómo te sientes?</span>
+                                    <div class="flex gap-4">
+                                        <button class="mood-btn opacity-40 hover:opacity-100 transition-opacity text-xl" data-mood="good" title="Bien">😊</button>
+                                        <button class="mood-btn opacity-40 hover:opacity-100 transition-opacity text-xl" data-mood="neutral" title="Normal">😐</button>
+                                        <button class="mood-btn opacity-40 hover:opacity-100 transition-opacity text-xl" data-mood="bad" title="Mal">😫</button>
+                                    </div>
+                                </div>
+
+                                <!-- Opportunity Cost / Craving Button (Idea 13) -->
+                                <div class="relative group">
+                                    <button id="btn-cravings" class="w-full py-4 bg-orange-500/5 border border-orange-500/10 text-orange-500/70 hover:text-orange-500 hover:bg-orange-500/10 font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl transition-all flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-sm">front_hand</span>
+                                        Tengo Hambre
+                                    </button>
+                                    
+                                    <!-- Cost Message (Hidden) -->
+                                    <div id="opportunity-cost-box" class="absolute bottom-full left-0 w-full mb-4 glass-panel p-5 border-orange-500/20 bg-orange-950/20 hidden animate-fade-in z-50">
+                                        <div class="flex items-start gap-4">
+                                            <div class="premium-icon-box !bg-orange-500/20 !border-orange-500/30 !text-orange-500"><span class="material-symbols-outlined text-lg">warning</span></div>
+                                            <div>
+                                                <span class="text-[9px] text-orange-500 font-black uppercase tracking-widest block mb-1">Costo de Oportunidad</span>
+                                                <p id="opportunity-cost-text" class="text-[10px] font-bold text-white leading-tight">Si comes ahora, detendrás la fase de Cetosis Activa y perderás el pico de quema de grasa.</p>
+                                                <button id="btn-close-cost" class="mt-3 text-[9px] font-black text-orange-500/50 hover:text-orange-500 underline uppercase tracking-tighter">Entiendo, seguiré adelante</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary State (Hidden by default) -->
+                        <div id="fast-summary-content" class="hidden w-full flex flex-col items-center animate-vital">
+                            <div class="mb-8 premium-icon-box !size-16 !bg-primary/20"><span class="material-symbols-outlined !text-4xl text-primary">task_alt</span></div>
+                            <h2 class="text-3xl font-black text-white mb-2 tracking-tight">Ayuno Completado</h2>
+                            <p class="text-slate-500 font-medium mb-10 uppercase tracking-widest text-[10px]">Resumen de tu sesión</p>
+                            
+                            <div class="w-full max-w-lg grid grid-cols-2 gap-4 mb-10">
+                                <div class="bg-white/[0.02] border border-white/5 p-6 rounded-[2.5rem] flex flex-col items-center">
+                                    <span class="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-3">Duración Total</span>
+                                    <span id="summary-duration" class="text-3xl font-black text-white stat-highlight">--:--</span>
+                                </div>
+                                <div class="bg-white/[0.02] border border-white/5 p-6 rounded-[2.5rem] flex flex-col items-center">
+                                    <span class="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-3">Protocolo</span>
+                                    <span id="summary-protocol" class="text-xl font-bold text-white">--:--</span>
+                                </div>
+                                <div class="col-span-2 bg-primary/5 border border-primary/20 p-8 rounded-[2.5rem] flex flex-col items-center overflow-hidden relative">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
+                                    <span class="text-[10px] text-primary font-black uppercase tracking-widest mb-3 relative z-10">Rendimiento</span>
+                                    <div id="summary-performance-bar" class="w-full h-1.5 bg-white/5 rounded-full mb-3 relative z-10">
+                                        <div id="summary-progress-inner" class="h-full bg-primary shadow-[0_0_15px_rgba(124,58,237,0.5)] transition-all duration-1000" style="width: 0%"></div>
+                                    </div>
+                                    <span id="summary-message" class="text-xs font-bold text-white relative z-10 text-center uppercase tracking-widest">---</span>
+                                </div>
+
+                                <!-- Fast Breaking Assistant Card -->
+                                <div id="summary-recom-card" class="col-span-1 md:col-span-2 bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-[2.5rem] flex items-center gap-5 relative overflow-hidden opacity-0 translate-y-4 transition-all duration-700 delay-300">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
+                                    <div class="premium-icon-box !bg-emerald-500/20 !border-emerald-500/30 !text-emerald-500 relative z-10 scale-110">
+                                        <span class="material-symbols-outlined">restaurant</span>
+                                    </div>
+                                    <div class="relative z-10">
+                                        <span class="text-[9px] text-emerald-500 font-black uppercase tracking-[0.2em] block mb-1">Ruptura de Ayuno Ideal</span>
+                                        <p id="summary-recom-text" class="text-xs font-bold text-white leading-relaxed">Analizando tu estado para recomendar la mejor comida...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="btn-dismiss-summary" class="w-full max-w-sm py-5 bg-white/5 border border-white/10 text-slate-300 font-black text-sm rounded-3xl hover:bg-white/10 transition-all uppercase tracking-widest">
+                                Volver al Temporizador
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Protocols Grid -->
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-3">
+                            <div class="premium-icon-box size-8"><span class="material-symbols-outlined text-sm">tune</span></div>
+                            <h2 class="text-xl font-bold text-white uppercase tracking-tight">Seleccionar Protocolo</h2>
+                        </div>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="glass-panel p-6 cursor-pointer protocol-card border-primary/40 bg-primary/5 active-card" data-protocol="16:8" data-hours="16">
+                                <div class="protocol-check absolute top-4 right-4 text-primary">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                </div>
+                                <div class="mb-5 premium-icon-box"><span class="material-symbols-outlined">timelapse</span></div>
+                                <h3 class="font-bold text-white text-lg">16:8</h3>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Principiante</p>
+                            </div>
+                            
+                            <div class="glass-panel p-6 cursor-pointer protocol-card" data-protocol="18:6" data-hours="18">
+                                <div class="protocol-check absolute top-4 right-4 text-primary hidden">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                </div>
+                                <div class="mb-5 premium-icon-box opacity-40"><span class="material-symbols-outlined">hourglass_top</span></div>
+                                <h3 class="font-bold text-white text-lg">18:6</h3>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Avanzado</p>
+                            </div>
+
+                            <div class="glass-panel p-6 cursor-pointer protocol-card" data-protocol="OMAD" data-hours="23">
+                                <div class="protocol-check absolute top-4 right-4 text-primary hidden">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                </div>
+                                <div class="mb-5 premium-icon-box opacity-40"><span class="material-symbols-outlined">restaurant_menu</span></div>
+                                <h3 class="font-bold text-white text-lg">OMAD</h3>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">23:1</p>
+                            </div>
+
+                            <div class="glass-panel p-6 cursor-pointer protocol-card" data-protocol="Personalizado" data-hours="custom">
+                                <div class="protocol-check absolute top-4 right-4 text-primary hidden">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                </div>
+                                <div class="mb-5 premium-icon-box opacity-40"><span class="material-symbols-outlined">settings</span></div>
+                                <h3 class="font-bold text-white text-lg">Custom</h3>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">A medida</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Secondary Column (Stats & History) -->
+                <div class="lg:col-span-4 flex flex-col gap-8">
+                    <!-- Weekly Progress -->
+                    <div class="glass-panel p-8 relative overflow-hidden group">
+                        <div class="accent-glow glow-top-right opacity-20"></div>
+                        <div class="flex items-center justify-between mb-8 relative z-10">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Meta Semanal</h3>
+                            <div class="premium-icon-box !bg-yellow-500/10 !text-yellow-500 !border-yellow-500/20"><span class="material-symbols-outlined text-sm">emoji_events</span></div>
+                        </div>
+                        <div class="flex items-end gap-3 mb-6 relative z-10">
+                            <span id="weekly-goal-current" class="text-6xl font-black text-white stat-highlight">0</span>
+                            <span class="text-xs text-slate-500 mb-3 font-bold uppercase tracking-widest">/ 7 Días</span>
+                        </div>
+                        <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden relative z-10">
+                            <div id="weekly-goal-progress" class="h-full bg-primary shadow-[0_0_10px_rgba(124,58,237,0.5)] transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <p id="weekly-goal-message" class="text-xs text-slate-500 mt-6 leading-relaxed font-medium relative z-10">Consistencia es la clave. ¡Empieza hoy!</p>
+                    </div>
+
+                    <!-- Mini History -->
+                    <div class="glass-panel flex-1 flex flex-col min-h-[450px]">
+                        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                            <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Historial Reciente</h3>
+                            <button onclick="window.location.href='history.html'" class="premium-icon-box size-8"><span class="material-symbols-outlined text-sm">history</span></button>
+                        </div>
+                        <div id="recent-fasts-container" class="p-6 space-y-4 overflow-y-auto max-h-[500px]">
+                            <p class="text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest py-20">Analizando registros...</p>
+                        </div>
+                        <div class="mt-auto p-6 bg-white/[0.01] border-t border-white/5">
+                            <button onclick="window.location.href='history.html'" class="w-full py-4 text-[10px] font-black text-slate-400 bg-white/5 hover:bg-white/10 rounded-2xl transition-all uppercase tracking-widest">
+                                Ver Panel Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- La navegación móvil se inyecta dinámicamente desde auth-guard.js -->
+
+</main>
+<script type="module" src="timer-logic.js"></script>
+</body></html>

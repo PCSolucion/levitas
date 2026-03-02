@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<script type="module" src="auth-guard.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Levitas - Estadísticas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M10 50 L30 50 L40 10 L60 90 L70 50 L90 50' fill='none' stroke='%237c3aed' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7c3aed",
+                        "secondary": "#7c3aed",
+                        "accent": "#7c3aed",
+                        "background-light": "#0a0a0f",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#161622",
+                        "surface-light": "#161622",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.6); }
+        
+        * { box-sizing: border-box; }
+        
+        /* Body and Base Typography */
+        body {
+            background-color: #0a0a0f;
+            font-family: "Space Grotesk", sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f 0%, #0d0d16 50%, #0a0a0f 100%);
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
+            font-family: "Outfit", sans-serif;
+        }
+
+        /* Replicated Premium Dashboard Cards */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            border-radius: 1.25rem !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-color: rgba(124, 58, 237, 0.3) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(124, 58, 237, 0.1) !important;
+        }
+
+        /* Accent Color Effect */
+        .accent-glow {
+            position: absolute;
+            width: 154px;
+            height: 154px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-top-right { top: -77px; right: -77px; }
+        .glow-bottom-left { bottom: -77px; left: -77px; }
+
+        /* Section Badges */
+        .section-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(167, 139, 250, 0.1) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 20px;
+            color: #a78bfa;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        /* Stat highlights */
+        .stat-highlight {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        /* Glowing accents */
+        /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
+        @keyframes ekgTrace {
+            0% { 
+                clip-path: inset(0 100% 0 0); 
+                opacity: 0;
+            }
+            100% { 
+                clip-path: inset(0 0 0 0);
+                opacity: 1;
+            }
+        }
+
+        .animate-vital {
+            animation: ekgTrace 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            display: inline-block;
+        }
+
+        .premium-icon-box {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(167, 139, 250, 0.1) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+        }
+
+        /* Existing style cleanups */
+        .bg-green-100 { background: rgba(34, 197, 94, 0.15) !important; }
+        .text-green-700, .text-green-500 { color: #4ade80 !important; }
+        .bg-red-100 { background: rgba(239, 68, 68, 0.15) !important; }
+        .text-red-700, .text-red-500 { color: #f87171 !important; }
+
+        /* Sidebar New Style (CodePen Replicated) */
+        #mobile-sidebar {
+            background: linear-gradient(180deg, rgba(13, 13, 22, 0.95) 0%, rgba(10, 10, 15, 0.98) 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+            position: relative;
+        }
+
+        #mobile-sidebar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -1px;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(124, 58, 237, 0.5), transparent);
+            z-index: 10;
+        }
+
+                .tab-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            background: transparent;
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            border: 1px solid transparent;
+            text-decoration: none !important;
+        }
+
+        .tab-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(167, 139, 250, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 12px;
+        }
+
+        .tab-btn::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%);
+            border-radius: 0 4px 4px 0;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn:hover {
+            transform: translateX(4px);
+        }
+
+        .tab-btn:hover::before {
+            opacity: 0.5;
+        }
+
+        .tab-btn.active {
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border-color: rgba(124, 58, 237, 0.15);
+        }
+
+        .tab-btn.active::before {
+            opacity: 1;
+        }
+
+        .tab-btn.active::after {
+            transform: translateY(-50%) scaleY(1);
+        }
+
+        .tab-btn .tab-icon {
+            position: relative;
+            z-index: 1;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .tab-btn.active .tab-icon {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .tab-btn .tab-icon span {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.4s ease;
+        }
+
+        .tab-btn.active .tab-icon span,
+        .tab-btn:hover .tab-icon span {
+            color: #fff;
+        }
+
+
+        .tab-btn.active .tab-icon span,
+        .tab-btn:hover .tab-icon span {
+            color: #fff;
+        }
+
+        .tab-btn .tab-text {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tab-btn .tab-title {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.4s ease;
+        }
+
+        .tab-btn.active .tab-title,
+        .tab-btn:hover .tab-title {
+            color: #fff;
+        }
+
+        .tab-btn .tab-subtitle {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            margin-top: 1px;
+            transition: color 0.4s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-btn.active .tab-subtitle {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-btn .tab-arrow {
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s ease;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tab-btn.active .tab-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Input styling */
+        input, select, textarea {
+            background: #12121e !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #e2e8f0 !important;
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(139, 92, 246, 0.5) !important;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1) !important;
+        }
+
+        /* Bottom mobile nav */
+        .fixed.bottom-11, .fixed.bottom-0 {
+            background: #0d0d16 !important;
+            border-top: 1px solid rgba(255,255,255,0.04) !important;
+        }
+
+        /* SVG Circle timer - purple glow */
+        svg circle.text-\[#a78bfa\] {
+            stroke: #7c3aed !important;
+        }
+
+        /* Cyan/water elements keep their identity but muted */
+        .bg-cyan-500 {
+            background: #06b6d4 !important;
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;
+        }
+
+        /* Chart bars */
+        .bg-accent\/40 { background: rgba(124, 58, 237, 0.25) !important; }
+        .bg-accent { background: #7c3aed !important; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out both;
+        }
+        
+        main > header, 
+        main > .grid {
+            animation: fadeInUp 0.6s ease-out both;
+        }
+        main > .grid { animation-delay: 0.15s; }
+
+        /* Protocol button cards */
+        .protocol-btn {
+            background: #161622 !important;
+            border-color: rgba(255,255,255,0.06) !important;
+            color: rgba(255,255,255,0.5) !important;
+        }
+        .protocol-btn:hover {
+            border-color: rgba(139, 92, 246, 0.3) !important;
+        }
+        
+        /* Ensure all content sits above the particle canvas */
+        #mobile-sidebar, main, .fixed {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-[#0a0a0f] font-display text-white dark:text-slate-100 min-h-screen flex overflow-hidden relative">
+<aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-surface-light dark:bg-background-dark border-r border-white/5 dark:border-white/10 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out flex flex-col h-screen">
+    <!-- El contenido del sidebar se inyecta dinámicamente desde auth-guard.js -->
+</aside>
+
+    <main class="flex-1 h-screen overflow-y-auto bg-[#0a0a0f] p-4 md:p-8 relative">
+                <div class="md:hidden flex items-center justify-between mb-4">
+            <a href="dashboard.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div class="bg-primary/10 p-2 rounded-lg">
+            <span class="material-symbols-outlined text-primary text-2xl animate-vital">vital_signs</span>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-primary dark:text-white super-glow">Levitas</span>
+    </a>
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-slate-200 dark:bg-surface-dark bg-cover bg-center border-2 border-white/5 dark:border-white/10"></div>
+                <button class="p-2 text-slate-400" onclick="document.getElementById('mobile-sidebar').classList.remove('-translate-x-full')">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </div>
+        <div class="max-w-[1200px] mx-auto flex flex-col gap-10">
+            <!-- Header Section -->
+            <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
+                <div class="space-y-2">
+                                        <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white invisible">
+                        Tu <span class="text-primary super-glow">Temporizador</span>
+                    </h1>
+                    <p class="text-slate-500 text-lg font-medium">Analiza tu progreso y visualiza tus metas alcanzadas.</p>
+                </div>
+                <div class="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5">
+                    <button class="px-5 py-2 text-xs font-black uppercase tracking-widest rounded-xl text-slate-500 hover:text-white transition-all">Semanal</button>
+                    <button class="px-5 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-white shadow-xl shadow-primary/20">Mensual</button>
+                    <button class="px-5 py-2 text-xs font-black uppercase tracking-widest rounded-xl text-slate-500 hover:text-white transition-all">Anual</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Stat 1: Longest Fast -->
+                <div class="glass-panel p-8 group">
+                    <div class="accent-glow glow-top-right opacity-30"></div>
+                    <div class="flex items-center gap-4 mb-6 relative z-10">
+                        <div class="premium-icon-box"><span class="material-symbols-outlined">timer</span></div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Más Largo</p>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 id="stat-fastest-fast" class="text-5xl font-black stat-highlight">--<span class="text-sm text-slate-500 font-bold ml-1 uppercase">h</span></h3>
+                        <p class="text-xs text-slate-500 font-medium mt-2">Tu récord personal de ayuno</p>
+                    </div>
+                </div>
+
+                <!-- Stat 2: Current Streak -->
+                <div class="glass-panel p-8 group">
+                    <div class="accent-glow glow-bottom-left opacity-30"></div>
+                    <div class="flex items-center gap-4 mb-6 relative z-10">
+                        <div class="premium-icon-box !bg-orange-500/10 !text-orange-500 !border-orange-500/20"><span class="material-symbols-outlined">local_fire_department</span></div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Racha Actual</p>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 id="stat-streak" class="text-5xl font-black text-white group-hover:text-orange-500 transition-colors duration-500">0<span class="text-sm text-slate-500 font-bold ml-1 uppercase">días</span></h3>
+                        <p class="text-xs text-slate-500 font-medium mt-2">Días consecutivos cumpliendo</p>
+                    </div>
+                </div>
+
+                <!-- Stat 3: Weekly Weight Average -->
+                <div class="glass-panel p-8 group">
+                    <div class="accent-glow glow-bottom-left opacity-30"></div>
+                    <div class="flex items-center gap-4 mb-6 relative z-10">
+                        <div class="premium-icon-box !bg-emerald-500/10 !text-emerald-500 !border-emerald-500/20"><span class="material-symbols-outlined">analytics</span></div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Media Semanal</p>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 id="stat-weekly-avg" class="text-5xl font-black text-white group-hover:text-emerald-500 transition-colors duration-500">--<span class="text-sm text-slate-500 font-bold ml-1 uppercase">kg</span></h3>
+                        <p class="text-xs text-slate-500 font-medium mt-2">Promedio de peso de los últimos 7 días</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <!-- Stat 4: Daily Tip -->
+                 <div class="glass-panel p-8 group">
+                    <div class="flex items-center gap-4 mb-6 relative z-10">
+                        <div class="premium-icon-box !bg-cyan-500/10 !text-cyan-500 !border-cyan-500/20"><span class="material-symbols-outlined">tips_and_updates</span></div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Tip Maestro</p>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 id="stat-tip-title" class="text-sm font-black text-white mb-2 uppercase tracking-tight">Estrategia Mental</h3>
+                        <p id="stat-tip-text" class="text-xs text-slate-500 leading-relaxed font-medium">Bebe agua mineral con una pizca de sal para mantener electrolitos durante el ayuno largo.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-8 group flex items-center justify-between">
+                    <div class="relative z-10">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Progreso Total</p>
+                        <h3 class="text-2xl font-black text-white"><span id="stat-total-lost" class="stat-highlight">0</span> kg perdidos</h3>
+                    </div>
+                    <div class="size-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-3xl">trending_down</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discipline Heatmap Section -->
+            <div class="glass-panel p-8 mb-6 overflow-hidden relative group">
+                <div class="accent-glow glow-top-left opacity-10"></div>
+                <div class="flex items-center justify-between mb-8 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="premium-icon-box !bg-indigo-500/10 !text-indigo-500 !border-indigo-500/20"><span class="material-symbols-outlined text-sm">grid_view</span></div>
+                        <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Mapa de Disciplina</h3>
+                    </div>
+                    <div class="flex items-center gap-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                        <span>Menos</span>
+                        <div class="flex gap-1">
+                            <div class="size-2.5 rounded-sm bg-white/5"></div>
+                            <div class="size-2.5 rounded-sm bg-indigo-500/20"></div>
+                            <div class="size-2.5 rounded-sm bg-indigo-500/40"></div>
+                            <div class="size-2.5 rounded-sm bg-indigo-500/70"></div>
+                            <div class="size-2.5 rounded-sm bg-indigo-500"></div>
+                        </div>
+                        <span>Más</span>
+                    </div>
+                </div>
+                
+                <div class="relative z-10 overflow-x-auto pb-2 scrollbar-hide">
+                    <div id="discipline-heatmap" class="flex gap-1.5 min-w-max">
+                        <!-- Generado dinámicamente -->
+                        <div class="text-[10px] text-slate-600 font-bold uppercase tracking-widest py-10 w-full text-center">Calculando trayectoria de hábitos...</div>
+                    </div>
+                </div>
+                <p class="text-[9px] text-slate-600 mt-6 font-bold uppercase tracking-widest relative z-10 italic">Basado en registros de ayuno, hidratación y peso de los últimos 90 días</p>
+            </div>
+
+            <!-- Achievements Preview -->
+            <div class="glass-panel p-8">
+                <div class="flex items-center justify-between mb-10 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="premium-icon-box"><span class="material-symbols-outlined">military_tech</span></div>
+                        <h2 class="text-2xl font-bold text-white uppercase tracking-tight">Logros Destacados</h2>
+                    </div>
+                    <a href="badges.html" class="text-xs font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-2">
+                        Ver todas Logros
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                    <div id="no-badges-placeholder" class="col-span-full py-16 text-center border-2 border-dashed border-white/5 rounded-3xl">
+                        <div class="premium-icon-box mx-auto mb-4 opacity-30"><span class="material-symbols-outlined">lock</span></div>
+                        <p class="text-slate-500 font-bold uppercase text-[10px] tracking-widest italic">No has desbloqueado ninguna medalla todavía</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- La navegación móvil se inyecta dinámicamente desde auth-guard.js -->
+
+    </main>
+    <script type="module" src="stats-logic.js"></script>
+</body>
+</html>

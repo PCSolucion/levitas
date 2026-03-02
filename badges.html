@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+<script type="module" src="auth-guard.js"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Logros - Levitas</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M10 50 L30 50 L40 10 L60 90 L70 50 L90 50' fill='none' stroke='%237c3aed' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7c3aed",
+                        "secondary": "#7c3aed",
+                        "accent": "#7c3aed",
+                        "background-light": "#0a0a0f",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#161622",
+                        "surface-light": "#161622",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.6); }
+        * { box-sizing: border-box; }
+                body {
+            background-color: #0a0a0f;
+            font-family: "Space Grotesk", sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
+        @keyframes ekgTrace {
+            0% { 
+                clip-path: inset(0 100% 0 0); 
+                opacity: 0;
+            }
+            100% { 
+                clip-path: inset(0 0 0 0);
+                opacity: 1;
+            }
+        }
+
+        .animate-vital {
+            animation: ekgTrace 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            display: inline-block;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: "Outfit", sans-serif;
+        }
+        /* Sidebar New Style (CodePen Replicated) */
+        #mobile-sidebar {
+            background: linear-gradient(180deg, rgba(13, 13, 22, 0.95) 0%, rgba(10, 10, 15, 0.98) 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+            position: relative;
+        }
+
+        #mobile-sidebar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -1px;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(124, 58, 237, 0.5), transparent);
+            z-index: 10;
+        }
+
+                .tab-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            background: transparent;
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            border: 1px solid transparent;
+            text-decoration: none !important;
+        }
+
+        .tab-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(167, 139, 250, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 12px;
+        }
+
+        .tab-btn::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%);
+            border-radius: 0 4px 4px 0;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn:hover {
+            transform: translateX(4px);
+        }
+
+        .tab-btn:hover::before {
+            opacity: 0.5;
+        }
+
+        .tab-btn.active {
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border-color: rgba(124, 58, 237, 0.15);
+        }
+
+        .tab-btn.active::before {
+            opacity: 1;
+        }
+
+        .tab-btn.active::after {
+            transform: translateY(-50%) scaleY(1);
+        }
+
+        .tab-btn .tab-icon {
+            position: relative;
+            z-index: 1;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .tab-btn.active .tab-icon {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .tab-btn .tab-icon span {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.4s ease;
+        }
+
+        .tab-btn.active .tab-icon span,
+        .tab-btn:hover .tab-icon span {
+            color: #fff;
+        }
+
+        .tab-btn .tab-text {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tab-btn .tab-title {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.4s ease;
+        }
+
+        .tab-btn.active .tab-title,
+        .tab-btn:hover .tab-title {
+            color: #fff;
+        }
+
+        .tab-btn .tab-subtitle {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            margin-top: 1px;
+            transition: color 0.4s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-btn.active .tab-subtitle {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-btn .tab-arrow {
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s ease;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tab-btn.active .tab-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .badge-card {
+            animation: fadeInUp 0.5s ease-out both;
+        }
+        .badge-locked {
+            filter: grayscale(1);
+            opacity: 0.35;
+        }
+        .badge-locked:hover {
+            opacity: 0.5;
+            filter: grayscale(0.7);
+        }
+    </style>
+</head>
+<body class="bg-[#0a0a0f] font-display text-white min-h-screen flex overflow-hidden relative">
+<aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-surface-light dark:bg-background-dark border-r border-white/5 dark:border-white/10 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out flex flex-col h-screen">
+    <!-- El contenido del sidebar se inyecta dinámicamente desde auth-guard.js -->
+</aside>
+
+    <main class="flex-1 h-screen overflow-y-auto bg-[#0a0a0f] p-4 md:p-8 relative">
+        <!-- Mobile Header -->
+                <div class="md:hidden flex items-center justify-between mb-4">
+                                    <a href="dashboard.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div class="bg-primary/10 p-1.5 rounded-lg">
+                    <span class="material-symbols-outlined text-primary text-xl animate-vital">vital_signs</span>
+                </div>
+                <span class="text-lg font-bold text-white tracking-tight super-glow">Levitas</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-slate-200 dark:bg-surface-dark bg-cover bg-center border-2 border-white/5 dark:border-white/10"></div>
+                <button class="p-2 text-slate-400" onclick="document.getElementById('mobile-sidebar').classList.remove('-translate-x-full')">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="max-w-[1200px] mx-auto flex flex-col gap-10">
+            <!-- Header Section -->
+            <header class="pb-6 border-b border-white/5">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div class="space-y-2">
+                                                <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white invisible">
+                            Tus <span class="text-primary super-glow">Logros</span>
+                        </h1>
+                        <p class="text-slate-500 text-lg font-medium">Colecciona medallas mientras mejoras tu disciplina diaria.</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="glass-panel !rounded-2xl px-5 py-3 border-white/5 bg-white/[0.02] flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-sm">emoji_events</span>
+                            <span id="unlocked-count" class="text-xs font-black text-white uppercase tracking-widest">0 Logros</span>
+                        </div>
+                        <div class="glass-panel !rounded-2xl px-5 py-3 border-white/5 bg-white/[0.01] flex items-center gap-3">
+                            <span class="material-symbols-outlined text-slate-600 text-sm">lock</span>
+                            <span id="locked-count" class="text-xs font-black text-slate-500 uppercase tracking-widest">-- Pendientes</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Badges Grid -->
+            <div id="badges-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <!-- Badges will be injected here by badges-logic.js -->
+            </div>
+        </div>
+
+        <!-- La navegación móvil se inyecta dinámicamente desde auth-guard.js -->
+
+    </main>
+    <script type="module" src="badges-logic.js"></script>
+</body>
+</html>
