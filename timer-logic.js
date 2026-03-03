@@ -141,13 +141,13 @@ document.addEventListener("DOMContentLoaded", () => {
             // Dynamics colors based on intensity
             if (currentStage.intensity < 40) {
                 intensityBar.className = "h-full bg-blue-500 transition-all duration-1000";
-                intensityPct.className = "text-[8px] font-black text-blue-500 uppercase";
+                intensityPct.className = "text-[10px] font-black text-blue-500 uppercase tracking-widest";
             } else if (currentStage.intensity < 80) {
                 intensityBar.className = "h-full bg-primary transition-all duration-1000";
-                intensityPct.className = "text-[8px] font-black text-primary uppercase";
+                intensityPct.className = "text-[10px] font-black text-primary uppercase tracking-widest";
             } else {
                 intensityBar.className = "h-full bg-orange-500 transition-all duration-1000 shadow-[0_0_10px_rgba(249,115,22,0.5)]";
-                intensityPct.className = "text-[8px] font-black text-orange-500 uppercase";
+                intensityPct.className = "text-[10px] font-black text-orange-500 uppercase tracking-widest";
             }
         }
 
@@ -237,20 +237,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isRepairWindow) {
             icon.innerText = "auto_fix_high";
             icon.className = "material-symbols-outlined text-[14px] text-primary animate-pulse";
-            text.innerText = "Reparación Celular Máxima: Sincronizado";
-            text.className = "text-[8px] font-black text-primary uppercase tracking-widest leading-none";
+            text.innerText = "Reparación Celular Máxima";
+            text.className = "text-[10px] font-black text-primary uppercase tracking-widest leading-none";
             if(tooltipBox) tooltipBox.innerText = "Entre las 22:00 y las 05:00, tu cuerpo entra en su pico de regeneración hormonal y celular (Autofagia). Ayunar en esta ventana potencializa la reparación biológica profunda.";
         } else if (isNightWindow) {
             icon.innerText = "dark_mode";
             icon.className = "material-symbols-outlined text-[14px] text-amber-400";
-            text.innerText = "Sincronización Circadiana: Alta";
-            text.className = "text-[8px] font-black text-amber-400 uppercase tracking-widest leading-none";
+            text.innerText = "Sincronización Circadiana";
+            text.className = "text-[10px] font-black text-amber-400 uppercase tracking-widest leading-none";
             if(tooltipBox) tooltipBox.innerText = "Ayunar durante las horas de oscuridad respeta el ritmo circadiano natural de tus hormonas, mejorando la sensibilidad a la insulina y la calidad de tu descanso metabólico.";
         } else {
             icon.innerText = "wb_sunny";
             icon.className = "material-symbols-outlined text-[14px] text-emerald-400";
-            text.innerText = "Ayuno en Ventana Metabólica Activa";
-            text.className = "text-[8px] font-black text-emerald-400 uppercase tracking-widest leading-none";
+            text.innerText = "Ventana Metabólica Activa";
+            text.className = "text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none";
             if(tooltipBox) tooltipBox.innerText = "Durante el día, tu metabolismo está dinámico. Ayunar aquí es excelente para la oxidación de grasas mientras te mantienes activo y enfocado físicamente.";
         }
     };
@@ -626,20 +626,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 limitDocs.forEach(doc => {
                     const data = doc.data();
-                    const dateStr = data.startTime?.toDate().toLocaleDateString([], { month: 'short', day: 'numeric' }) || "";
+                    const dateStr = data.startTime?.toDate().toLocaleDateString([], { month: 'short', day: 'numeric' }) || "--";
                     const fastItem = document.createElement("div");
-                    fastItem.className = "flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group";
+                    fastItem.className = "bg-white/[0.02] border border-white/5 p-5 rounded-2xl hover:bg-white/[0.05] transition-all group relative overflow-hidden";
+                    
+                    const successColor = data.success ? 'emerald' : 'orange';
+                    const icon = data.success ? 'check_circle' : 'cancel';
+
                     fastItem.innerHTML = `
-                        <div class="size-10 rounded-full ${data.success ? 'text-primary bg-primary/10' : 'text-orange-500 bg-orange-500/10'} flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-[20px]">${data.success ? 'check' : 'close'}</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between mb-0.5">
-                                <h4 class="font-bold text-sm truncate">Protocolo ${data.protocol}</h4>
-                                <span class="text-xs font-bold ${data.success ? 'text-primary' : 'text-orange-500'}">${data.actualHours}h</span>
+                        <div class="flex flex-col gap-4 relative z-10">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="premium-icon-box !size-8 !bg-${successColor}-500/10 !text-${successColor}-500 !border-${successColor}-500/20">
+                                        <span class="material-symbols-outlined text-base">${icon}</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <h4 class="text-[11px] font-black text-white uppercase tracking-widest">Protocolo ${data.protocol}</h4>
+                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">${dateStr}</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-lg font-black text-white leading-none">${data.actualHours}<span class="text-[10px] text-slate-500 ml-0.5">h</span></span>
+                                    <span class="text-[8px] font-black ${data.success ? 'text-emerald-500' : 'text-orange-500'} uppercase tracking-widest">${data.success ? 'Completado' : 'Interrumpido'}</span>
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">${dateStr}</p>
-                        </div>`;
+                            
+                            <!-- Mini Progress Bar -->
+                            <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-${successColor}-500 transition-all duration-1000" style="width: ${Math.min(100, (data.actualHours / data.goalHours) * 100)}%"></div>
+                            </div>
+                        </div>
+                        <div class="accent-glow !size-24 -bottom-10 -right-10 !bg-${successColor}-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    `;
                     recentFastsContainer.appendChild(fastItem);
                 });
             }
@@ -687,16 +705,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const updateProtocolCards = (currentP) => {
         const protocolCards = document.querySelectorAll(".protocol-card");
         protocolCards.forEach(card => {
-            card.classList.remove("border-primary", "bg-primary/5");
-            card.classList.add("border-slate-200", "dark:border-slate-800", "bg-white");
+            card.classList.remove("border-primary/40", "bg-primary/5", "active-card");
             card.querySelector(".protocol-check")?.classList.add("hidden");
 
             const isCustom = currentP.startsWith("Personalizado") && card.dataset.protocol === "Personalizado";
             const isMatch = card.dataset.protocol === currentP;
 
             if (isCustom || isMatch) {
-                card.classList.add("border-primary", "bg-primary/5");
-                card.classList.remove("border-slate-200", "dark:border-slate-800", "bg-white");
+                card.classList.add("border-primary/40", "bg-primary/5", "active-card");
                 card.querySelector(".protocol-check")?.classList.remove("hidden");
             }
         });

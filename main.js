@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, setDoc, addDoc, query, where, limit, serverTimestamp } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc, addDoc, query, where, limit, serverTimestamp, orderBy } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase-config.js";
 import { showAlert, showConfirm } from "./modals.js";
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             protocolBtns.forEach(btn => {
                 const isActive = btn.innerText === protocolButtonToSelect;
-                btn.className = `protocol-btn p-3 rounded-xl border transition-all text-sm ${isActive ? 'bg-primary text-white font-bold border-primary shadow-lg shadow-primary/20' : 'border-slate-200 dark:border-primary/20 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-400 font-medium'}`;
+                btn.className = `protocol-btn py-3 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${isActive ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'border-white/5 bg-white/[0.02] text-slate-500'}`;
             });
             updateDiff();
         }
@@ -68,9 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
     protocolBtns.forEach(btn => {
         btn.addEventListener("click", (e) => {
             protocolBtns.forEach(b => {
-                b.className = "protocol-btn p-3 rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-400 hover:border-primary transition-all text-sm font-medium";
+                b.className = "protocol-btn py-3 rounded-xl border border-white/5 bg-white/[0.02] text-slate-500 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 transition-all";
             });
-            e.target.className = "protocol-btn p-3 rounded-xl border border-primary bg-primary text-white font-bold shadow-lg shadow-primary/20 text-sm";
+            e.target.className = "protocol-btn py-3 rounded-xl border border-primary bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20";
             selectedProtocol = e.target.innerText;
             if (e.target.dataset.custom) {
                 if(customContainer) customContainer.classList.remove("hidden");
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if(customContainer) customContainer.classList.add("hidden");
                 protocolBtns.forEach(btn => {
                     const isActive = btn.innerText === selectedProtocol;
-                    btn.className = `protocol-btn p-3 rounded-xl border transition-all text-sm ${isActive ? 'bg-primary text-white font-bold border-primary shadow-lg shadow-primary/20' : 'border-slate-200 dark:border-primary/20 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-400 font-medium'}`;
+                    btn.className = `protocol-btn py-3 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${isActive ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'border-white/5 bg-white/[0.02] text-slate-500'}`;
                 });
                 updateDiff();
                 await showAlert("Aviso", "Plan reseteado en el formulario. Recuerda darle a 'Guardar mi Plan' para confirmar los cambios.", "info");
@@ -195,8 +195,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const curr = Number(currentWeightEl.value);
         if(!start || !curr) return;
         const diff = curr - start;
-        diffSpan.innerText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg`;
-        diffSpan.className = `absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-1 rounded ${diff > 0 ? 'bg-red-500/10 text-red-500' : 'bg-secondary/10 text-secondary'}`;
+        diffSpan.innerText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)} KG`;
+        diffSpan.className = `absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest ${diff > 0 ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`;
     };
 
     currentWeightEl?.addEventListener("input", updateDiff);

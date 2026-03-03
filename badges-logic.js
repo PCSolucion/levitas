@@ -157,7 +157,16 @@ document.addEventListener("DOMContentLoaded", () => {
         let unlockedCount = 0;
         grid.innerHTML = "";
 
-        badges.forEach((badge, index) => {
+        // Sort badges: unlocked first, then by original ID
+        const sortedBadges = [...badges].sort((a, b) => {
+            const aUnlocked = a.condition(stats);
+            const bUnlocked = b.condition(stats);
+            if (aUnlocked && !bUnlocked) return -1;
+            if (!aUnlocked && bUnlocked) return 1;
+            return a.id - b.id;
+        });
+
+        sortedBadges.forEach((badge, index) => {
             const isUnlocked = badge.condition(stats);
             if (isUnlocked) unlockedCount++;
 

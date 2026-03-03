@@ -21,8 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const actionText = document.getElementById("dash-action-text");
     const weightDisplay = document.getElementById("stat-weight");
     const weightProgressBar = document.getElementById("dash-weight-progress-bar");
-    const statLastMeal = document.getElementById("stat-last-meal");
-    const statLastMealDate = document.getElementById("stat-last-meal-date");
+    const bmiValueEl = document.getElementById("dash-bmi-value");
+    const bmiBadgeEl = document.getElementById("dash-bmi-badge");
     const statBestStreak = document.getElementById("stat-best-streak");
     const streakLevel = document.getElementById("streak-level");
     const btnNotifications = document.getElementById("btn-notifications");
@@ -225,11 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (timerInterval) clearInterval(timerInterval);
                     timerInterval = setInterval(() => updateTimer(startTime, goalHours), 60000);
                     updateTimer(startTime, goalHours);
-                    
-                    if(statLastMeal) {
-                        statLastMeal.innerText = startDate.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
-                        if (statLastMealDate) statLastMealDate.innerText = startDate.toLocaleDateString([], {day: 'numeric', month: 'short'});
-                    }
                 } else {
                     if (timerInterval) clearInterval(timerInterval);
                     if(fastTitle) fastTitle.innerText = "Último Ayuno";
@@ -256,12 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                                 if(fastSubtitle) fastSubtitle.innerText = `${last.protocol} Completado`;
                         if(timerDisplay) timerDisplay.innerText = `${Math.floor(last.actualHours)}h`;
                         if(timerLabel) timerLabel.innerText = "Duración Total";
-
-                        if(last.startTime && statLastMeal) {
-                            const lastD = last.startTime.toDate();
-                            statLastMeal.innerText = lastD.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
-                            if (statLastMealDate) statLastMealDate.innerText = lastD.toLocaleDateString([], {day: 'numeric', month: 'short'});
-                        }
 
                         // Calculate Streak
                         const fastDates = new Set(allFasts.map(f => f.data().startTime?.toDate().toDateString()));
@@ -448,32 +437,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     // BMI and Recommendation Logic
                     if (goals.height && goals.currentWeight) {
-                    const heightM = goals.height / 100;
-                    const bmi = (goals.currentWeight / (heightM * heightM)).toFixed(1);
-                    const bmiBadge = document.getElementById("dash-bmi-badge");
-                    if (bmiBadge) {
-                        bmiBadge.innerText = `IMC ${bmi}`;
-                        bmiBadge.classList.remove("hidden");
-                    }
+                        const heightM = goals.height / 100;
+                        const bmiNum = Number((goals.currentWeight / (heightM * heightM)).toFixed(1));
+                        
+                        const bmiValueEl = document.getElementById("dash-bmi-value");
+                        const bmiBadgeEl = document.getElementById("dash-bmi-badge");
 
-                    const recTitle = document.getElementById("recom-title");
-                    const recText = document.getElementById("recom-text");
-                    if (recTitle && recText) {
-                        if (bmi < 18.5) {
-                            recTitle.innerText = "Enfoque: Nutrición";
-                            recText.innerText = "Tu IMC es bajo. Prioriza proteínas y evit ayunos muy largos (máximo 14h).";
-                        } else if (bmi < 25) {
-                            recTitle.innerText = "Enfoque: Mantenimiento";
-                            recText.innerText = "¡Peso saludable! Un protocolo 16:8 es ideal para mantener tu energía y salud celular.";
-                        } else if (bmi < 30) {
-                            recTitle.innerText = "Enfoque: Quema Grasa";
-                            recText.innerText = "Protocolo 18:6 o 20:4 recomendado para optimizar la pérdida de grasa corporal.";
-                        } else {
-                            recTitle.innerText = "Enfoque: Salud Metabólica";
-                            recText.innerText = "Considera protocolos como el OMAD (una comida al día) bajo supervisión para mejorar la sensibilidad a la insulina.";
+                        if (bmiValueEl) bmiValueEl.innerText = bmiNum.toFixed(1);
+                        
+                        if (bmiBadgeEl) {
+                            bmiBadgeEl.classList.remove("hidden");
+                            let category = "Normal";
+                            let colorClass = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+                            
+                            if (bmiNum < 18.5) {
+                                category = "Bajo Peso";
+                                colorClass = "bg-red-500/10 text-red-500 border-red-500/20";
+                            } else if (bmiNum < 25) {
+                                category = "Peso Normal";
+                                colorClass = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+                            } else if (bmiNum < 30) {
+                                category = "Sobrepeso";
+                                colorClass = "bg-orange-500/10 text-orange-500 border-orange-500/20";
+                            } else {
+                                category = "Obesidad";
+                                colorClass = "bg-red-500/10 text-red-500 border-red-500/20";
+                            }
+                            
+                            bmiBadgeEl.innerText = category;
+                            bmiBadgeEl.className = `px-2 py-0.5 rounded-md uppercase tracking-widest text-[9px] border ${colorClass} font-black`;
+                        }
+
+                        const recTitle = document.getElementById("recom-title");
+                        const recText = document.getElementById("recom-text");
+                        if (recTitle && recText) {
+                            if (bmiNum < 18.5) {
+                                recTitle.innerText = "Enfoque: Nutrición";
+                                recText.innerText = "Tu IMC es bajo. Prioriza proteínas y evita ayunos muy largos (máximo 14h).";
+                            } else if (bmiNum < 25) {
+                                recTitle.innerText = "Enfoque: Mantenimiento";
+                                recText.innerText = "¡Peso saludable! Un protocolo 16:8 es ideal para mantener tu energía y salud celular.";
+                            } else if (bmiNum < 30) {
+                                recTitle.innerText = "Enfoque: Quema Grasa";
+                                recText.innerText = "Protocolo 18:6 o 20:4 recomendado para optimizar la pérdida de grasa corporal.";
+                            } else {
+                                recTitle.innerText = "Enfoque: Salud Metabólica";
+                                recText.innerText = "Considera protocolos como el OMAD (una comida al día) bajo supervisión para mejorar la sensibilidad a la insulina.";
+                            }
                         }
                     }
-                }
             }
         });
     };

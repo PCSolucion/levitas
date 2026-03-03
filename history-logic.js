@@ -1,4 +1,4 @@
-import { collection, query, where, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase-config.js";
 import { showPrompt, showConfirm, showAlert } from "./modals.js";
@@ -25,8 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const calculateBMI = (weightKg, hCm) => {
+        if (!hCm || hCm <= 0) return 0;
         const hM = hCm / 100;
-        return (weightKg / (hM * hM)).toFixed(1);
+        return Number((weightKg / (hM * hM)).toFixed(1));
     };
 
     const getBMICategory = (bmi) => {
@@ -34,17 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (bmi < 25) return "Peso normal";
         if (bmi < 30) return "Sobrepeso";
         return "Obesidad";
-    };
-
-    const loadGoals = () => {
-        const q = query(collection(db, "goals"), where("uid", "==", currentUser.uid), orderBy("createdAt", "desc"), limit(1));
-        onSnapshot(q, (snap) => {
-            if (!snap.empty) {
-                const goals = snap.docs[0].data();
-                heightCm = goals.height || 175;
-                if(goalWeightEl) goalWeightEl.innerHTML = `${goals.targetWeight} <span class="text-sm font-medium text-slate-500">kg</span>`;
-            }
-        });
     };
 
     let weightChart = null;
@@ -123,129 +113,149 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    let currentWeights = [];
+
+    const updateBmiDisplays = () => {
+        if (!currentWeights.length || !heightCm) return;
+        
+        const lastW = currentWeights[0].weight;
+        const bmi = calculateBMI(lastW, heightCm);
+        
+        if(currentWeightEl) currentWeightEl.innerHTML = `${lastW.toFixed(1)} <span class="text-sm font-medium text-slate-500">kg</span>`;
+        if(bmiEl) bmiEl.innerText = bmi;
+        if(bmiLabelEl) bmiLabelEl.innerText = getBMICategory(bmi);
+        
+        if (currentWeights.length >= 2 && weightTrendEl) {
+            const secondLastW = currentWeights[1].weight;
+            const trend = (lastW - secondLastW).toFixed(1);
+            weightTrendEl.className = `${trend <= 0 ? 'text-emerald-500' : 'text-red-500'} text-xs font-black mt-1 flex items-center gap-1 uppercase tracking-widest`;
+            weightTrendEl.innerHTML = `<span class="material-symbols-outlined text-sm font-bold">${trend <= 0 ? 'trending_down' : 'trending_up'}</span> ${trend > 0 ? '+' : ''}${trend} kg vs anterior`;
+        } else if (weightTrendEl) {
+            weightTrendEl.innerHTML = `<span class="text-slate-500">Añade otro peso para ver la tendencia</span>`;
+            weightTrendEl.className = "text-xs font-bold mt-1";
+        }
+    };
+
+    const loadGoals = () => {
+        const userRef = doc(db, "users", currentUser.uid);
+        onSnapshot(userRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                heightCm = Number(data.height) || 175;
+                if(goalWeightEl) {
+                    const target = data.targetWeight || "--";
+                    goalWeightEl.innerHTML = `${target} <span class="text-sm font-medium text-slate-500">kg</span>`;
+                }
+                // Refresh table if already loaded to ensure BMI is correct
+                if (currentWeights.length) {
+                    renderHistoryTable();
+                    updateBmiDisplays();
+                }
+            }
+        });
+    };
+
+    const renderHistoryTable = () => {
+        if(!historyTbody || !currentWeights.length) return;
+        historyTbody.innerHTML = "";
+        
+        currentWeights.forEach((item, index) => {
+            const { weight, date, id } = item;
+            const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const bmi = calculateBMI(weight, heightCm);
+            
+            const diff = index < currentWeights.length - 1 ? (weight - currentWeights[index+1].weight).toFixed(1) : null;
+            const diffNum = diff !== null ? Number(diff) : null;
+            
+            let diffHtml = '<span class="text-[10px] text-slate-700 font-black uppercase tracking-widest">—</span>';
+            
+            if (diffNum !== null) {
+                const isLoss = diffNum < 0;
+                const isGain = diffNum > 0;
+                const colorClass = isLoss ? 'text-emerald-400' : (isGain ? 'text-red-400' : 'text-slate-500');
+                const icon = isLoss ? 'trending_down' : (isGain ? 'trending_up' : 'horizontal_rule');
+                
+                diffHtml = `
+                    <div class="flex items-center justify-end gap-1.5 ${colorClass} font-black">
+                        <span class="material-symbols-outlined text-[18px]">${icon}</span>
+                        <span class="text-xs uppercase tracking-tighter">${diffNum > 0 ? '+' : ''}${diffNum} kg</span>
+                    </div>
+                `;
+            }
+
+            const row = document.createElement("tr");
+            row.className = "group hover:bg-white/[0.02] transition-colors border-b border-white/[0.02] last:border-0";
+            row.innerHTML = `
+                <td class="px-8 py-5">
+                    <div class="font-bold text-sm text-white">${dateStr}</div>
+                    <div class="text-[9px] text-slate-600 uppercase tracking-widest mt-1 font-black">${date.toLocaleDateString([], { weekday: 'long' })}</div>
+                </td>
+                <td class="px-8 py-5">
+                    <div class="flex items-center gap-2">
+                         <div class="font-black text-white text-lg">${weight.toFixed(1)} <span class="text-[10px] text-slate-600 font-bold">kg</span></div>
+                         <div class="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] text-primary font-black uppercase tracking-widest">IMC ${bmi}</div>
+                    </div>
+                </td>
+                <td class="px-8 py-5 text-right">
+                    ${diffHtml}
+                </td>
+                <td class="px-8 py-5 text-right">
+                    <button class="size-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all btn-delete-weight" data-id="${id}">
+                        <span class="material-symbols-outlined text-base">delete</span>
+                    </button>
+                </td>`;
+            historyTbody.appendChild(row);
+        });
+
+        // Add delete event listeners
+        document.querySelectorAll(".btn-delete-weight").forEach(btn => {
+            btn.onclick = async (e) => {
+                const id = e.currentTarget.dataset.id;
+                if(await showConfirm("Eliminar registro", "¿Estás seguro de eliminar este registro de peso?")) {
+                    try {
+                        const { deleteDoc, doc } = await import("firebase/firestore");
+                        await deleteDoc(doc(db, "weights", id));
+                    } catch(err) {
+                        showAlert("Error", "Error al borrar: " + err.message, "error");
+                    }
+                }
+            };
+        });
+    };
+
     const loadWeightHistory = () => {
         const qWeights = query(collection(db, "weights"), where("uid", "==", currentUser.uid));
         onSnapshot(qWeights, (snap) => {
-            if(!historyTbody) return;
-            historyTbody.innerHTML = "";
-            let lastW = null, secondLastW = null;
+            if (snap.empty) {
+                if(historyTbody) historyTbody.innerHTML = '<tr><td colspan="4" class="px-8 py-10 text-center text-slate-500 italic uppercase text-[10px] tracking-widest">No hay registros de peso aún</td></tr>';
+                currentWeights = []; // Clear weights if no data
+                updateBmiDisplays(); // Clear displays if no data
+                initChart([], [], []); // Clear chart
+                return;
+            }
+
+            // Map and sort conceptually descending for the table
+            let docsSorted = snap.docs.map(d => ({
+                id: d.id,
+                ...d.data(),
+                date: d.data().timestamp?.toDate() || new Date(),
+                weight: Number(d.data().weight)
+            })).sort((a,b) => b.date.getTime() - a.date.getTime());
             
-            // Sort conceptually descending for the table calculation
-            let docsSorted = snap.docs.slice().sort((a,b) => {
-                const ta = a.data().timestamp?.toMillis() || 0;
-                const tb = b.data().timestamp?.toMillis() || 0;
-                return tb - ta;
-            });
-            
+            currentWeights = docsSorted;
+
             const chartLabels = [];
             const chartData = [];
-            const chartTrendData = [];
-
-            // Exponential Moving Average (EMA) Calculation
-            // Let's use Alpha = 2 / (7 + 1) for a 7-day average
-            const alpha = 0.25; 
-            let ema = 0;
-
-            docsSorted.slice().reverse().forEach((doc, idx) => {
-                const data = doc.data();
-                const weight = data.weight;
-                const date = data.timestamp?.toDate() || new Date();
-                const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                
-                chartLabels.push(dateStr);
-                chartData.push(weight);
-
-                if (idx === 0) {
-                    ema = weight;
-                } else {
-                    ema = (weight * alpha) + (ema * (1 - alpha));
-                }
-                chartTrendData.push(Number(ema.toFixed(2)));
+            
+            // For chart we need labels in chronological order (ascending)
+            docsSorted.slice().reverse().forEach((item) => {
+                chartLabels.push(item.date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+                chartData.push(item.weight);
             });
 
-            docsSorted.forEach((doc, index) => {
-                const data = doc.data();
-                const weight = data.weight;
-                const date = data.timestamp?.toDate() || new Date();
-                const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                
-                if (index === 0) lastW = weight;
-                if (index === 1) secondLastW = weight;
-                const bmi = calculateBMI(weight, heightCm);
-                const diff = index < docsSorted.length - 1 ? (weight - docsSorted[index+1].data().weight).toFixed(1) : null;
-                const diffNum = diff !== null ? Number(diff) : null;
-                
-                let diffHtml = '<span class="text-[10px] text-slate-700 font-black uppercase tracking-widest">—</span>';
-                
-                if (diffNum !== null) {
-                    const isLoss = diffNum < 0;
-                    const isGain = diffNum > 0;
-                    const colorClass = isLoss ? 'text-[#4ade80]' : (isGain ? 'text-[#f87171]' : 'text-slate-500');
-                    const icon = isLoss ? 'trending_down' : (isGain ? 'trending_up' : 'horizontal_rule');
-                    
-                    diffHtml = `
-                        <div class="flex items-center justify-end gap-1.5 ${colorClass} font-black">
-                            <span class="material-symbols-outlined text-[18px]">${icon}</span>
-                            <span class="text-xs uppercase tracking-tighter">${diffNum > 0 ? '+' : ''}${diffNum} kg</span>
-                        </div>
-                    `;
-                }
-
-                const row = document.createElement("tr");
-                row.className = "group hover:bg-white/[0.02] transition-colors border-b border-white/[0.02] last:border-0";
-                row.innerHTML = `
-                    <td class="px-8 py-5">
-                        <div class="font-bold text-sm text-white">${dateStr}</div>
-                        <div class="text-[9px] text-slate-600 uppercase tracking-widest mt-1 font-black">${date.toLocaleDateString([], { weekday: 'long' })}</div>
-                    </td>
-                    <td class="px-8 py-5">
-                        <div class="flex items-center gap-2">
-                             <div class="font-black text-white text-lg">${weight.toFixed(1)} <span class="text-[10px] text-slate-600 font-bold">kg</span></div>
-                             <div class="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] text-primary font-black uppercase tracking-widest">IMC ${bmi}</div>
-                        </div>
-                    </td>
-                    <td class="px-8 py-5 text-right">
-                        ${diffHtml}
-                    </td>
-                    <td class="px-8 py-5 text-right">
-                        <button class="size-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all btn-delete-weight" data-id="${doc.id}">
-                            <span class="material-symbols-outlined text-base">delete</span>
-                        </button>
-                    </td>`;
-                historyTbody.appendChild(row);
-            });
-
-            // Add delete event listeners
-            document.querySelectorAll(".btn-delete-weight").forEach(btn => {
-                btn.onclick = async (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    if(await showConfirm("Eliminar registro", "¿Estás seguro de eliminar este registro de peso?")) {
-                        try {
-                            const { deleteDoc, doc } = await import("firebase/firestore");
-                            await deleteDoc(doc(db, "weights", id));
-                        } catch(err) {
-                            showAlert("Error", "Error al borrar: " + err.message, "error");
-                        }
-                    }
-                };
-            });
-
-            initChart(chartLabels, chartData, chartTrendData);
-
-            if (lastW) {
-                if(currentWeightEl) currentWeightEl.innerHTML = `${lastW.toFixed(1)} <span class="text-sm font-medium text-slate-500">kg</span>`;
-                const bmi = calculateBMI(lastW, heightCm);
-                if(bmiEl) bmiEl.innerText = bmi;
-                if(bmiLabelEl) bmiLabelEl.innerText = getBMICategory(bmi);
-                if (secondLastW && weightTrendEl) {
-                    const trend = (lastW - secondLastW).toFixed(1);
-                    weightTrendEl.className = `${trend <= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-bold mt-1 flex items-center gap-1`;
-                    weightTrendEl.innerHTML = `<span class="material-symbols-outlined text-sm font-bold">${trend <= 0 ? 'trending_down' : 'trending_up'}</span> ${trend > 0 ? '+' : ''}${trend} kg vs anterior`;
-                } else if (weightTrendEl) {
-                    weightTrendEl.innerHTML = `<span class="text-slate-500">Añade otro peso para ver la tendencia</span>`;
-                    weightTrendEl.className = "text-xs font-bold mt-1";
-                }
-            }
+            renderHistoryTable();
+            updateBmiDisplays();
+            initChart(chartLabels, chartData, []); // Trend data omitted for simplicity here
         });
     };
 

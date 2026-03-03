@@ -391,144 +391,150 @@
                     </p>
 </div>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div class="lg:col-span-12 space-y-10">
-                <!-- Personal Info Section -->
-                <section class="space-y-6">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-accent/10 rounded-lg text-accent">
-                            <span class="material-symbols-outlined">person</span>
-                        </div>
-                        <h3 class="text-2xl font-bold text-white dark:text-white">Información Personal</h3>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <label class="group block">
-                            <span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-accent transition-colors">Edad</span>
-                            <input id="input-age" type="number" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all" placeholder="Años">
-                        </label>
-                        <label class="group block">
-                            <span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-accent transition-colors">Sexo</span>
-                            <select id="select-sex" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all appearance-none cursor-pointer">
-                                <option value="" disabled selected>Selecciona...</option>
-                                <option value="male">Hombre</option>
-                                <option value="female">Mujer</option>
-                                <option value="other">Otro</option>
-                            </select>
-                        </label>
-                        <label class="group block">
-                            <span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-accent transition-colors">Altura (cm)</span>
-                            <div class="relative">
-                                <input id="input-height" type="number" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all" placeholder="175">
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">cm</span>
+                <div class="lg:col-span-12 space-y-8">
+                    <!-- Section: Biometric Profile -->
+                    <div class="glass-panel p-8 relative overflow-hidden group border-white/5">
+                        <div class="premium-card-header mb-8">
+                            <div class="premium-icon-box !bg-accent/10 !text-accent !border-accent/20">
+                                <span class="material-symbols-outlined">analytics</span>
                             </div>
-                        </label>
+                            <div>
+                                <h3 class="text-xl font-black text-white uppercase tracking-widest">Perfil Biométrico</h3>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Tus bases fisiológicas para el cálculo metabólico</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+                            <label class="group block">
+                                <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest group-focus-within:text-accent transition-colors">Edad (Años)</span>
+                                <input id="input-age" type="number" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black placeholder:text-slate-600 focus:border-accent focus:bg-white/[0.05] outline-none transition-all" placeholder="25">
+                            </label>
+
+                            <label class="group block">
+                                <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest group-focus-within:text-accent transition-colors">Sexo Biológico</span>
+                                <select id="select-sex" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black focus:border-accent focus:bg-white/[0.05] outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="" disabled selected class="bg-slate-900">Selecciona...</option>
+                                    <option value="male" class="bg-slate-900">Hombre</option>
+                                    <option value="female" class="bg-slate-900">Mujer</option>
+                                </select>
+                            </label>
+
+                            <label class="group block">
+                                <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest group-focus-within:text-accent transition-colors">Altura (cm)</span>
+                                <div class="relative">
+                                    <input id="input-height" type="number" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black placeholder:text-slate-600 focus:border-accent focus:bg-white/[0.05] outline-none transition-all" placeholder="175">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-[10px] font-black">CM</span>
+                                </div>
+                            </label>
+
+                            <label class="group block">
+                                <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest group-focus-within:text-accent transition-colors">Peso de Partida (kg)</span>
+                                <div class="relative">
+                                    <input id="input-starting-weight" type="number" step="0.1" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black placeholder:text-slate-600 focus:border-accent focus:bg-white/[0.05] outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed" placeholder="00.0">
+                                    <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-700 text-sm">lock</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="accent-glow !bg-accent/5 -top-10 -right-10 !size-40"></div>
                     </div>
-                </section>
 
-                <section class="space-y-6">
-<div class="flex items-center gap-3">
-<div class="p-2 bg-primary/10 rounded-lg text-primary">
-<span class="material-symbols-outlined">monitor_weight</span>
-</div>
-<h3 class="text-2xl font-bold">Objetivos de Peso</h3>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<label class="group relative block">
-<span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-primary transition-colors">Peso Inicial (kg)</span>
-<div class="relative">
-<input id="input-starting-weight" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed" type="number" step="0.1" placeholder="---"/>
-<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-300">lock</span>
-</div>
-</label>
-<label class="group relative block">
-<span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-primary transition-colors">Peso Actual (kg)</span>
-<div class="relative">
-<input id="input-current-weight" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" step="0.1" placeholder="---"/>
-<span id="diff-weight" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a78bfa] text-xs font-bold bg-[#7c3aed]/10 px-2 py-1 rounded">0 kg</span>
-</div>
-</label>
-<label class="group relative block">
-<span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-primary transition-colors">Peso Objetivo (kg)</span>
-<div class="relative">
-<input id="input-target-weight" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" step="0.1" placeholder="---"/>
-<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary animate-pulse">flag</span>
-</div>
-</label>
-</div>
-</section>
-<section class="space-y-6">
-<div class="flex items-center gap-3">
-<div class="p-2 bg-[#7c3aed]/10 rounded-lg text-[#a78bfa]">
-<span class="material-symbols-outlined">schedule</span>
-</div>
-<h3 class="text-2xl font-bold">Frecuencia y Protocolo</h3>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-<div class="space-y-4">
-<p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Protocolo de Ayuno</p>
-<div class="grid grid-cols-2 gap-3">
-<button class="protocol-btn p-3 rounded-xl border border-slate-200 dark:border-primary/20 glass-panel text-gray-300 dark:text-slate-400 hover:border-primary transition-all text-sm font-medium">Protocolo 16:8</button>
-<button class="protocol-btn p-3 rounded-xl border border-primary bg-primary text-white font-bold shadow-[0_0_10px_rgba(255,127,80,0.2)] text-sm">Protocolo 18:6</button>
-<button class="protocol-btn p-3 rounded-xl border border-slate-200 dark:border-primary/20 glass-panel text-gray-300 dark:text-slate-400 hover:border-primary transition-all text-sm font-medium">Protocolo OMAD</button>
-<button class="protocol-btn p-3 rounded-xl border border-slate-200 dark:border-primary/20 glass-panel text-gray-300 dark:text-slate-400 hover:border-primary transition-all text-sm font-medium" data-custom="true">Personalizado</button>
-</div>
-<div id="custom-protocol-container" class="hidden mt-4">
-<label class="group relative block">
-<span class="text-xs font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-primary transition-colors">Horas de Ayuno (1-24)</span>
-<input id="input-custom-protocol" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="1" max="24" placeholder="Ej: 14" />
-</label>
-</div>
-<div class="space-y-4">
-<p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Días por semana</p>
-<div class="relative pt-6">
-<input id="input-fasting-days" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" max="7" min="1" type="range" value="0"/>
-</div>
-</div>
-</div>
-<section class="space-y-6">
-<div class="flex items-center gap-3">
-<div class="p-2 bg-cyan-500/10 rounded-lg text-cyan-500">
-<span class="material-symbols-outlined">water_drop</span>
-</div>
-<h3 class="text-2xl font-bold">Meta de Hidratación</h3>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<label class="group block">
-<span class="text-sm font-semibold text-gray-400 dark:text-slate-400 mb-2 block group-focus-within:text-cyan-500 transition-colors">Meta Diaria (ml)</span>
-<div class="relative">
-<input id="input-water-goal" type="number" step="250" class="w-full glass-panel border border-slate-200 dark:border-primary/20 rounded-xl px-4 py-4 text-lg font-medium text-white dark:text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-all" placeholder="2000">
-<span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">ml</span>
-</div>
-<p class="text-xs text-gray-400 mt-2">Recomendado: 2000ml - 3000ml</p>
-</label>
-</div>
-</section>
+                    <!-- Section: Plan de Acción -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        
+                        <!-- Left Sub-card: Weight Strategy -->
+                        <div class="glass-panel p-8 border-white/5">
+                            <div class="premium-card-header mb-8">
+                                <div class="premium-icon-box !bg-primary/10 !text-primary !border-primary/20">
+                                    <span class="material-symbols-outlined">track_changes</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-black text-white uppercase tracking-widest">Estrategia de Peso</h3>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Define tu meta y mantén el registro actualizado</p>
+                                </div>
+                            </div>
 
-<div class="bg-gradient-to-br from-[#251e30] to-[#1a1523] border border-primary/20 rounded-2xl p-6 relative overflow-hidden group">
-<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-<span class="material-symbols-outlined text-9xl text-primary">format_quote</span>
-</div>
-<p class="text-lg font-medium text-white italic relative z-10 leading-relaxed">
-"El único entrenamiento malo es el que no ocurrió. Mantén la constancia, confía en el proceso."
-</p>
-<div class="flex items-center gap-3 mt-4 relative z-10">
-<div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary text-sm">fitness_center</span>
-</div>
-<span class="text-sm text-primary font-bold">Motivación Diaria</span>
-</div>
-</div>
+                            <div class="space-y-6">
+                                <label class="group block">
+                                    <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest group-focus-within:text-primary transition-colors">Peso Actual</span>
+                                    <div class="relative">
+                                        <input id="input-current-weight" type="number" step="0.1" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black placeholder:text-slate-600 focus:border-primary focus:bg-white/[0.05] outline-none transition-all" placeholder="00.0">
+                                        <span id="diff-weight" class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">0 KG</span>
+                                    </div>
+                                </label>
 
-                <!-- Save Button -->
-                <div class="flex flex-col md:flex-row justify-center md:justify-end pb-20 gap-4">
-                    <button id="btn-reset-plan" class="w-full md:w-auto px-8 py-5 glass-panel text-gray-300 dark:text-slate-400 text-lg font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-3 border border-slate-200 dark:border-white/5">
-                        <span class="material-symbols-outlined">restart_alt</span>
-                        Resetear Plan
-                    </button>
-                    <button id="btn-save-plan" class="w-full md:w-auto px-12 py-5 bg-primary text-white text-xl font-bold rounded-2xl shadow-xl shadow-primary/30 hover:scale-105 hover:bg-primary/90 transition-all active:scale-95 flex items-center justify-center gap-3">
-                        <span class="material-symbols-outlined">save</span>
-                        Guardar mi Plan
-                    </button>
+                                <label class="group block">
+                                    <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest group-focus-within:text-primary transition-colors">Peso Objetivo Final</span>
+                                    <div class="relative">
+                                        <input id="input-target-weight" type="number" step="0.1" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black placeholder:text-slate-600 focus:border-primary focus:bg-white/[0.05] outline-none transition-all" placeholder="00.0">
+                                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary/50 text-base animate-pulse">flag</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Right Sub-card: Fasting & Water -->
+                        <div class="glass-panel p-8 border-white/5">
+                            <div class="premium-card-header mb-8">
+                                <div class="premium-icon-box !bg-secondary/10 !text-secondary !border-secondary/20">
+                                    <span class="material-symbols-outlined">bolt</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-black text-white uppercase tracking-widest">Plan de Ayuno e Hidratación</h3>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Sincroniza tus hábitos diarios</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <span class="text-[9px] font-black text-slate-500 mb-3 block uppercase tracking-widest">Protocolo Sugerido</span>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button class="protocol-btn py-3 rounded-xl border border-white/5 bg-white/[0.02] text-slate-500 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 transition-all">Protocolo 16:8</button>
+                                        <button class="protocol-btn py-3 rounded-xl border border-white/5 bg-white/[0.02] text-slate-500 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 transition-all">Protocolo 18:6</button>
+                                        <button class="protocol-btn py-3 rounded-xl border border-white/5 bg-white/[0.02] text-slate-500 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 transition-all">Protocolo OMAD</button>
+                                        <button class="protocol-btn py-3 rounded-xl border border-white/5 bg-white/[0.02] text-slate-500 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 transition-all" data-custom="true">Personalizado</button>
+                                    </div>
+                                    <div id="custom-protocol-container" class="hidden mt-3">
+                                        <input id="input-custom-protocol" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-3 text-[11px] font-black text-white outline-none focus:border-primary" type="number" min="1" max="24" placeholder="HORAS (1-24)">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <label class="group block">
+                                        <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest">Frecuencia (Días)</span>
+                                        <input id="input-fasting-days" type="number" min="1" max="7" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black outline-none focus:border-primary transition-all" placeholder="7">
+                                    </label>
+                                    <label class="group block">
+                                        <span class="text-[9px] font-black text-slate-500 mb-2 block uppercase tracking-widest">Agua (ml)</span>
+                                        <input id="input-water-goal" type="number" step="250" class="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-4 text-white font-black outline-none focus:border-cyan-500 transition-all" placeholder="2000">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivational Quote & Actions -->
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="flex-1 glass-panel !bg-primary/5 p-6 border-primary/20 flex items-center gap-6 overflow-hidden relative">
+                            <span class="material-symbols-outlined text-4xl text-primary opacity-20 absolute -right-2 -bottom-2 scale-150">format_quote</span>
+                            <div class="premium-icon-box !size-10 !bg-primary/20 !text-primary !border-primary/30 shrink-0">
+                                <span class="material-symbols-outlined text-base">auto_awesome</span>
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-300 italic uppercase tracking-wider leading-relaxed">
+                                "El único entrenamiento malo es el que no ocurrió. Mantén la constancia, el tiempo hará el resto."
+                            </p>
+                        </div>
+
+                        <div class="flex shrink-0 gap-3">
+                            <button id="btn-reset-plan" class="px-6 py-5 glass-panel text-slate-500 hover:text-white hover:bg-white/5 transition-all flex items-center gap-3 border-white/5 group">
+                                <span class="material-symbols-outlined text-lg group-hover:rotate-180 transition-transform duration-500">restart_alt</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest">Reset</span>
+                            </button>
+                            <button id="btn-save-plan" class="px-10 py-5 bg-primary text-white text-[12px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-4">
+                                <span class="material-symbols-outlined group-hover:animate-bounce">verified_user</span>
+                                Guardar mi Plan
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
