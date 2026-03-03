@@ -339,59 +339,133 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const initWeightCard = () => {
         const userDocRef = doc(db, "users", currentUser.uid);
-        onSnapshot(userDocRef, async (snap) => {
-            if (snap.exists() && snap.data().startingWeight) {
-                const goals = snap.data();
-                const btnRegWeight = document.getElementById("btn-dash-weight");
-                
-                if(weightDisplay) weightDisplay.innerText = goals.currentWeight;
-                if(weightGoalText) weightGoalText.innerText = `${goals.targetWeight}`;
+        let currentGoals = null;
+        let weightUnsubscribe = null;
+        let lastWeightsSnap = null;
 
-                const totalToLose = goals.startingWeight - goals.targetWeight;
-                const lostSoFar = goals.startingWeight - goals.currentWeight;
-                const progress = totalToLose > 0 ? Math.max(0, Math.min((lostSoFar / totalToLose) * 100, 100)) : 0;
-                
-                if(weightProgressBar) weightProgressBar.style.width = `${progress}%`;
-                if(weightDiff) weightDiff.innerHTML = `<span class="text-emerald-500 font-bold">${lostSoFar.toFixed(1)} kg</span> total`;
+        const updateWeightDisplay = (weightsSnap) => {
+            lastWeightsSnap = weightsSnap;
+            if (!currentGoals) return;
+            const trendEl = document.getElementById("weight-trend");
+            
+            let docsSorted = weightsSnap.docs.slice().sort((a,b) => {
+                const da = a.data().timestamp?.toDate()?.getTime() || a.data().date?.toMillis() || 0;
+                const db = b.data().timestamp?.toDate()?.getTime() || b.data().date?.toMillis() || 0;
+                return db - da;
+            });
 
-                // Calculate Weight Trend
-                const trendEl = document.getElementById("weight-trend");
-                const wQuery = query(collection(db, "weights"), where("uid", "==", currentUser.uid));
-                try {
-                    const wSnap = await getDocs(wQuery);
-                    let allWeights = wSnap.docs.map(d => d.data().weight);
-                    if(wSnap.docs.length >= 2 && trendEl) {
-                        // Sort descending by timestamp
-                        let docsSorted = wSnap.docs.slice().sort((a,b) => {
-                            const ta = a.data().timestamp?.toMillis() || 0;
-                            const tb = b.data().timestamp?.toMillis() || 0;
-                            return tb - ta;
-                        });
-                        const current = docsSorted[0].data().weight;
-                        const previous = docsSorted[1].data().weight;
-                        const diff = current - previous;
-                        trendEl.classList.remove("hidden");
-                        if(diff < 0) {
-                            trendEl.innerText = `${diff.toFixed(1)} kg`;
-                            trendEl.className = "text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 uppercase";
-                        } else if(diff > 0) {
-                            trendEl.innerText = `+${diff.toFixed(1)} kg`;
-                            trendEl.className = "text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-500 uppercase";
-                        } else {
-                            trendEl.classList.add("hidden");
-                        }
-                    }
+            if (docsSorted.length === 0) {
+                if(weightDisplay) weightDisplay.innerText = currentGoals.currentWeight || currentGoals.startingWeight || "--";
+                return;
+            }
+
+            const current = Number(docsSorted[0].data().weight) || Number(currentGoals.currentWeight);
+            
+            // 1. Core Display
+            if(weightDisplay) weightDisplay.innerText = current;
+            if(weightGoalText) weightGoalText.innerText = `${currentGoals.targetWeight}`;
+
+            const totalToLose = currentGoals.startingWeight - currentGoals.targetWeight;
+            const lostSoFar = currentGoals.startingWeight - current;
+            const progress = totalToLose > 0 ? Math.max(0, Math.min((lostSoFar / totalToLose) * 100, 100)) : 0;
+            
+            if(weightProgressBar) weightProgressBar.style.width = `${progress}%`;
+            if(weightDiff) weightDiff.innerHTML = `<span class="text-emerald-500 font-bold">${lostSoFar.toFixed(1)} kg</span> total`;
+
+            // 2. Trend
+            if(docsSorted.length >= 2 && trendEl) {
+                const previous = docsSorted[1].data().weight;
+                const diff = current - previous;
+                trendEl.classList.remove("hidden");
+                if(diff < 0) {
+                    trendEl.innerText = `${diff.toFixed(1)} kg`;
+                    trendEl.className = "text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 uppercase";
+                } else if(diff > 0) {
+                    trendEl.innerText = `+${diff.toFixed(1)} kg`;
+                    trendEl.className = "text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-500 uppercase";
+                } else {
+                    trendEl.classList.add("hidden");
+                }
+            } else if (trendEl) {
+                trendEl.classList.add("hidden");
+            }
+
+            // 3. BMI Badge & Recommendation
+            if (currentGoals.height) {
+                const heightM = currentGoals.height / 100;
+                const bmiNum = Number((current / (heightM * heightM)).toFixed(1));
+                
+                const bmiValueEl = document.getElementById("dash-bmi-value");
+                const bmiBadgeEl = document.getElementById("dash-bmi-badge");
+
+                if (bmiValueEl) bmiValueEl.innerText = bmiNum.toFixed(1);
+                
+                if (bmiBadgeEl) {
+                    bmiBadgeEl.classList.remove("hidden");
+                    let category = "Normal";
+                    let colorClass = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
                     
-                    // Actualizamos la predicción con los datos de peso y objetivos
-                    updateWeightPrediction(wSnap, goals);
-
-                } catch (err) {
-                    console.error("Error calculating weight trend:", err);
-                    showAlert("Error de Base de Datos", "No se pudo cargar la tendencia de peso.", "error");
+                    if (bmiNum < 18.5) { category = "Bajo Peso"; colorClass = "bg-red-500/10 text-red-500 border-red-500/20"; }
+                    else if (bmiNum < 25) { category = "Peso Normal"; colorClass = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"; }
+                    else if (bmiNum < 30) { category = "Sobrepeso"; colorClass = "bg-orange-500/10 text-orange-500 border-orange-500/20"; }
+                    else { category = "Obesidad"; colorClass = "bg-red-500/10 text-red-500 border-red-500/20"; }
+                    
+                    bmiBadgeEl.innerText = category;
+                    bmiBadgeEl.className = `px-2 py-0.5 rounded-md uppercase tracking-widest text-[9px] border ${colorClass} font-black`;
                 }
 
+                // Update BMI marker position
+                const bmiMarker = document.getElementById("bmi-marker");
+                if (bmiMarker) {
+                    // Range 15 to 40
+                    let percent = ((bmiNum - 15) / (40 - 15)) * 100;
+                    percent = Math.max(0, Math.min(100, percent));
+                    bmiMarker.style.left = `${percent}%`;
+                }
+
+                const recTitle = document.getElementById("recom-title");
+                const recText = document.getElementById("recom-text");
+                if (recTitle && recText) {
+                    if (bmiNum < 18.5) {
+                        recTitle.innerText = "Enfoque: Nutrición";
+                        recText.innerText = "Tu IMC es bajo. Prioriza proteínas y evita ayunos muy largos (máximo 14h).";
+                    } else if (bmiNum < 25) {
+                        recTitle.innerText = "Enfoque: Mantenimiento";
+                        recText.innerText = "¡Peso saludable! Un protocolo 16:8 es ideal para mantener tu energía y salud celular.";
+                    } else if (bmiNum < 30) {
+                        recTitle.innerText = "Enfoque: Quema Grasa";
+                        recText.innerText = "Protocolo 18:6 o 20:4 recomendado para optimizar la pérdida de grasa corporal.";
+                    } else {
+                        recTitle.innerText = "Enfoque: Salud Metabólica";
+                        recText.innerText = "Considera protocolos como el OMAD (una comida al día) para mejorar la sensibilidad a la insulina.";
+                    }
+                }
+            }
+
+            // 4. Update Prediction
+             updateWeightPrediction(weightsSnap, currentGoals);
+        };
+
+        onSnapshot(userDocRef, (snap) => {
+            if (snap.exists() && snap.data().startingWeight) {
+                currentGoals = snap.data();
+                
+                // Initialize weight listener once we have goals
+                if (!weightUnsubscribe) {
+                    const wQuery = query(collection(db, "weights"), where("uid", "==", currentUser.uid));
+                    weightUnsubscribe = onSnapshot(wQuery, (wSnap) => {
+                        updateWeightDisplay(wSnap);
+                    });
+                } else if (lastWeightsSnap) {
+                    updateWeightDisplay(lastWeightsSnap);
+                }
+
+                const btnRegWeight = document.getElementById("btn-dash-weight");
+                
                 const handleWeightUpdate = async () => {
-                    const newWeight = await showPrompt("Actualizar Peso", "Introduce tu peso actual (kg):", goals.currentWeight, "number");
+                    // Use the latest value from the UI or currentGoals as fallback
+                    const displayVal = weightDisplay?.innerText || currentGoals.currentWeight;
+                    const newWeight = await showPrompt("Actualizar Peso", "Introduce tu peso actual (kg):", displayVal, "number");
                     if(newWeight && !isNaN(newWeight)) {
                         try {
                             if(btnRegWeight) btnRegWeight.disabled = true;
@@ -423,69 +497,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     handleWeightUpdate();
                 };
 
-                    // Logic for reaching goal
-                    if (goals.currentWeight <= goals.targetWeight) {
-                        const hasShownGoalPopup = localStorage.getItem(`goal_congrats_${currentUser.uid}`);
-                        if (!hasShownGoalPopup) {
-                            const confirmMaintenance = await showConfirm("✨ ¡FELICIDADES!", "Has alcanzado tu meta de peso. ¿Quieres pasar al 'Modo Mantenimiento'?");
-                            if (confirmMaintenance) {
-                                window.location.href = "index.html?mode=maintenance";
-                            }
-                            localStorage.setItem(`goal_congrats_${currentUser.uid}`, "true");
-                        }
+                // Goal Achievement Logic
+                if (currentGoals.currentWeight <= currentGoals.targetWeight) {
+                    const hasShownGoalPopup = localStorage.getItem(`goal_congrats_${currentUser.uid}`);
+                    if (!hasShownGoalPopup) {
+                        showConfirm("✨ ¡FELICIDADES!", "Has alcanzado tu meta de peso. ¿Quieres pasar al 'Modo Mantenimiento'?")
+                            .then(confirm => {
+                                if (confirm) window.location.href = "index.html?mode=maintenance";
+                                localStorage.setItem(`goal_congrats_${currentUser.uid}`, "true");
+                            });
                     }
-
-                    // BMI and Recommendation Logic
-                    if (goals.height && goals.currentWeight) {
-                        const heightM = goals.height / 100;
-                        const bmiNum = Number((goals.currentWeight / (heightM * heightM)).toFixed(1));
-                        
-                        const bmiValueEl = document.getElementById("dash-bmi-value");
-                        const bmiBadgeEl = document.getElementById("dash-bmi-badge");
-
-                        if (bmiValueEl) bmiValueEl.innerText = bmiNum.toFixed(1);
-                        
-                        if (bmiBadgeEl) {
-                            bmiBadgeEl.classList.remove("hidden");
-                            let category = "Normal";
-                            let colorClass = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-                            
-                            if (bmiNum < 18.5) {
-                                category = "Bajo Peso";
-                                colorClass = "bg-red-500/10 text-red-500 border-red-500/20";
-                            } else if (bmiNum < 25) {
-                                category = "Peso Normal";
-                                colorClass = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-                            } else if (bmiNum < 30) {
-                                category = "Sobrepeso";
-                                colorClass = "bg-orange-500/10 text-orange-500 border-orange-500/20";
-                            } else {
-                                category = "Obesidad";
-                                colorClass = "bg-red-500/10 text-red-500 border-red-500/20";
-                            }
-                            
-                            bmiBadgeEl.innerText = category;
-                            bmiBadgeEl.className = `px-2 py-0.5 rounded-md uppercase tracking-widest text-[9px] border ${colorClass} font-black`;
-                        }
-
-                        const recTitle = document.getElementById("recom-title");
-                        const recText = document.getElementById("recom-text");
-                        if (recTitle && recText) {
-                            if (bmiNum < 18.5) {
-                                recTitle.innerText = "Enfoque: Nutrición";
-                                recText.innerText = "Tu IMC es bajo. Prioriza proteínas y evita ayunos muy largos (máximo 14h).";
-                            } else if (bmiNum < 25) {
-                                recTitle.innerText = "Enfoque: Mantenimiento";
-                                recText.innerText = "¡Peso saludable! Un protocolo 16:8 es ideal para mantener tu energía y salud celular.";
-                            } else if (bmiNum < 30) {
-                                recTitle.innerText = "Enfoque: Quema Grasa";
-                                recText.innerText = "Protocolo 18:6 o 20:4 recomendado para optimizar la pérdida de grasa corporal.";
-                            } else {
-                                recTitle.innerText = "Enfoque: Salud Metabólica";
-                                recText.innerText = "Considera protocolos como el OMAD (una comida al día) bajo supervisión para mejorar la sensibilidad a la insulina.";
-                            }
-                        }
-                    }
+                }
             }
         });
     };

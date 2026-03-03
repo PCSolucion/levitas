@@ -1,4 +1,4 @@
-import { collection, query, where, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs, doc } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs, doc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase-config.js";
 import { showPrompt, showConfirm, showAlert } from "./modals.js";
@@ -213,8 +213,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = e.currentTarget.dataset.id;
                 if(await showConfirm("Eliminar registro", "¿Estás seguro de eliminar este registro de peso?")) {
                     try {
-                        const { deleteDoc, doc } = await import("firebase/firestore");
+                        const { deleteDoc } = await import("firebase/firestore");
                         await deleteDoc(doc(db, "weights", id));
+                        
+                        // After deleting, if there was more than one weight, we update the user doc with the new latest
+                        if (currentWeights.length > 1) {
+                            const newLatest = currentWeights[1].weight; // currentWeights[0] is the one being deleted
+                            await updateDoc(doc(db, "users", currentUser.uid), { currentWeight: newLatest });
+                        }
                     } catch(err) {
                         showAlert("Error", "Error al borrar: " + err.message, "error");
                     }
@@ -266,11 +272,18 @@ document.addEventListener("DOMContentLoaded", () => {
             if (weight && !isNaN(weight)) {
                 try {
                     btnAddWeight.disabled = true;
+                    const weightNum = Number(weight);
                     await addDoc(collection(db, "weights"), {
                         uid: currentUser.uid,
-                        weight: Number(weight),
+                        weight: weightNum,
                         timestamp: serverTimestamp()
                     });
+                    
+                    // Actualizar el peso actual en el perfil del usuario para el Dashboard
+                    await updateDoc(doc(db, "users", currentUser.uid), { 
+                        currentWeight: weightNum 
+                    });
+                    
                     showAlert("Registrado", "Peso grabado correctamente", "success");
                 } catch (e) {
                     showAlert("Error", "Error al guardar el peso: " + e.message, "error");
