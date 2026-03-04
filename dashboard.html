@@ -441,7 +441,7 @@
     <!-- Notifications Dropdown -->
     <div class="relative">
         <button id="btn-notifications" class="p-2 glass-panel rounded-lg border border-white/5 dark:border-white/5 text-gray-400 hover:text-accent transition-colors relative shadow-sm">
-            <span class="absolute top-2 right-2.5 h-2 w-2 bg-primary rounded-full border-2 border-white dark:border-surface-dark"></span>
+            <span id="notification-dot" class="absolute top-2 right-2.5 h-2 w-2 bg-primary rounded-full border-2 border-white dark:border-surface-dark hidden"></span>
             <span class="material-symbols-outlined">notifications</span>
         </button>
                 <div id="notifications-dropdown" class="dropdown-content absolute right-0 mt-2 w-72 bg-[#161622] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
@@ -449,9 +449,11 @@
                 <span class="text-xs font-bold uppercase tracking-widest text-[#a78bfa]">Notificaciones</span>
                 <span class="text-[10px] text-gray-500">Recientes</span>
             </div>
-            <div class="p-6 text-center">
-                <span class="material-symbols-outlined text-gray-700 text-3xl mb-2">notifications_off</span>
-                <p class="text-xs text-gray-500">No hay notificaciones nuevas</p>
+            <div id="notifications-list" class="max-h-80 overflow-y-auto">
+                <div class="p-6 text-center">
+                    <span class="material-symbols-outlined text-gray-700 text-3xl mb-2">notifications_off</span>
+                    <p class="text-xs text-gray-500">No hay notificaciones nuevas</p>
+                </div>
             </div>
         </div>
     </div>
@@ -570,8 +572,8 @@
                     <span id="dash-timer-label" class="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em] mt-3">Estado Actual</span>
                     
                     <!-- Metabolic Phase Mini Badge -->
-                    <div id="dash-metabolic-phase" class="mt-4 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 hidden transition-all duration-500">
-                        <span id="dash-metabolic-text" class="text-[8px] font-black text-primary uppercase tracking-widest">---</span>
+                    <div id="dash-metabolic-phase" class="mt-4 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 hidden flex items-center justify-center transition-all duration-500">
+                        <span id="dash-metabolic-text" class="text-[8px] font-black text-primary uppercase tracking-widest leading-none">---</span>
                     </div>
                 </div>
             </div>

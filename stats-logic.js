@@ -188,62 +188,176 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const renderDisciplineHeatmap = async (uid) => {
-        const heatmapContainer = document.getElementById("discipline-heatmap");
-        if (!heatmapContainer) return;
+        const wrapper = document.getElementById("discipline-heatmap-wrapper");
+        if (!wrapper) return;
 
-        const ninetyDaysAgo = new Date();
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        const DAYS = 91; // 13 weeks
+        const startDay = new Date();
+        startDay.setDate(startDay.getDate() - (DAYS - 1));
+        startDay.setHours(0, 0, 0, 0);
+        const startTime = startDay.getTime();
 
-        // Fetch data
+        // Fetch all user data (filter in JS to avoid composite index requirements)
         const [fasts, weights, water] = await Promise.all([
-            getDocs(query(collection(db, "fasts"), where("uid", "==", uid), where("createdAt", ">=", ninetyDaysAgo))),
-            getDocs(query(collection(db, "weights"), where("uid", "==", uid), where("timestamp", ">=", ninetyDaysAgo))),
-            getDocs(query(collection(db, "waterLogs"), where("uid", "==", uid), where("timestamp", ">=", ninetyDaysAgo)))
+            getDocs(query(collection(db, "fasts"), where("uid", "==", uid))),
+            getDocs(query(collection(db, "weights"), where("uid", "==", uid))),
+            getDocs(query(collection(db, "waterLogs"), where("uid", "==", uid)))
         ]);
 
-        const activityMap = {};
-
-        // Helper to normalize dates
-        const normalize = (date) => new Date(date).toDateString();
+        const fastMap = {};   // dateStr -> { count, totalHours }
+        const waterMap = {};  // dateStr -> ml
+        const weightMap = {}; // dateStr -> weight
 
         fasts.forEach(d => {
-            const date = normalize(d.data().createdAt?.toDate());
-            activityMap[date] = (activityMap[date] || 0) + 2; // Fasting gives +2 points
+            const raw = d.data().createdAt || d.data().startTime;
+            if (!raw) return;
+            const dateObj = raw.toDate ? raw.toDate() : new Date(raw);
+            if (dateObj.getTime() < startTime) return;
+            const k = dateObj.toDateString();
+            if (!fastMap[k]) fastMap[k] = { count: 0, totalHours: 0 };
+            fastMap[k].count++;
+            fastMap[k].totalHours += d.data().actualHours || 0;
         });
+
         weights.forEach(d => {
-            const date = normalize(d.data().timestamp?.toDate());
-            activityMap[date] = (activityMap[date] || 0) + 1; // Weighing gives +1 point
+            const raw = d.data().timestamp;
+            if (!raw) return;
+            const dateObj = raw.toDate ? raw.toDate() : new Date(raw);
+            if (dateObj.getTime() < startTime) return;
+            const k = dateObj.toDateString();
+            weightMap[k] = d.data().weight;
         });
+
         water.forEach(d => {
-            const date = normalize(d.data().timestamp?.toDate());
-            activityMap[date] = (activityMap[date] || 0) + 1; // Hydration gives +1 point
+            const dateField = d.data().date;
+            if (!dateField) return;
+            const dateObj = new Date(dateField + "T12:00:00");
+            if (dateObj.getTime() < startTime) return;
+            const k = dateObj.toDateString();
+            waterMap[k] = (waterMap[k] || 0) + (d.data().amount_ml || 0);
         });
 
-        // Render 90 days
-        heatmapContainer.innerHTML = "";
-        for (let i = 0; i <= 90; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() - (90 - i));
-            const dateStr = d.toDateString();
-            const score = activityMap[dateStr] || 0;
+        // Score per day (max 4)
+        const score = (k) => {
+            let s = 0;
+            if (fastMap[k])  s += Math.min(2, fastMap[k].count * 2);
+            if (waterMap[k]) s += 1;
+            if (weightMap[k]) s += 1;
+            return s;
+        };
 
-            const box = document.createElement("div");
-            box.className = "size-3 rounded-[3px] transition-all hover:scale-125 cursor-pointer relative group/tip";
-            
-            // Color levels
-            if (score === 0) box.className += " bg-white/5";
-            else if (score <= 1) box.className += " bg-indigo-500/20";
-            else if (score <= 2) box.className += " bg-indigo-500/40";
-            else if (score <= 3) box.className += " bg-indigo-500/70";
-            else box.className += " bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]";
+        // Color based on score
+        const cellColor = (s) => {
+            if (s === 0) return "bg-white/5";
+            if (s <= 1)  return "bg-indigo-500/25";
+            if (s <= 2)  return "bg-indigo-500/50";
+            if (s <= 3)  return "bg-indigo-500/75";
+            return "bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.7)]";
+        };
 
-            // Tooltip
-            const tip = document.createElement("div");
-            tip.className = "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-[8px] text-white rounded opacity-0 group-hover/tip:opacity-100 pointer-events-none whitespace-nowrap z-20 font-bold uppercase tracking-widest border border-white/10";
-            tip.innerText = `${d.toLocaleDateString([], {day: 'numeric', month: 'short'})}: ${score} pts`;
-            box.appendChild(tip);
-
-            heatmapContainer.appendChild(box);
+        // Build day array
+        const allDays = [];
+        for (let i = 0; i < DAYS; i++) {
+            const d = new Date(startDay);
+            d.setDate(d.getDate() + i);
+            allDays.push(d);
         }
+
+        // Pad front so first column aligns to Monday (0=Mon ... 6=Sun)
+        const firstDow = (allDays[0].getDay() + 6) % 7;
+        const padded = [...Array(firstDow).fill(null), ...allDays];
+
+        // Split into weeks (columns of 7)
+        const weeks = [];
+        for (let i = 0; i < padded.length; i += 7) weeks.push(padded.slice(i, i + 7));
+
+        const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+        const DAYS_ES   = ["L","M","X","J","V","S","D"];
+
+        // Build DOM
+        wrapper.innerHTML = "";
+
+        const outer = document.createElement("div");
+        outer.className = "flex gap-1 min-w-max select-none";
+
+        // Day-of-week label column
+        const dayCol = document.createElement("div");
+        dayCol.className = "flex flex-col pt-5 mr-0.5";
+        DAYS_ES.forEach((label, idx) => {
+            const el = document.createElement("div");
+            el.className = "h-3 w-4 flex items-center text-[8px] font-bold text-slate-600 uppercase mb-1";
+            el.innerText = idx % 2 === 0 ? label : "";
+            dayCol.appendChild(el);
+        });
+        outer.appendChild(dayCol);
+
+        // Week columns
+        let lastMonth = -1;
+        weeks.forEach((week) => {
+            const col = document.createElement("div");
+            col.className = "flex flex-col gap-1 relative group/col hover:z-[50] transition-all";
+
+            // Month label row
+            const monthEl = document.createElement("div");
+            monthEl.className = "h-4 flex items-end text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-0.5";
+            const firstReal = week.find(d => d !== null);
+            if (firstReal) {
+                const m = firstReal.getMonth();
+                if (m !== lastMonth && firstReal.getDate() <= 7) {
+                    monthEl.innerText = MONTHS_ES[m];
+                    lastMonth = m;
+                }
+            }
+            col.appendChild(monthEl);
+
+            // Day cells
+            week.forEach(day => {
+                const cell = document.createElement("div");
+                cell.className = "size-3 rounded-[2px] transition-all duration-150 relative group/cell";
+
+                if (!day) {
+                    cell.classList.add("bg-transparent", "pointer-events-none");
+                } else {
+                    const k = day.toDateString();
+                    const s = score(k);
+                    const isToday = k === new Date().toDateString();
+
+                    cell.className += ` ${cellColor(s)} hover:scale-125 cursor-default`;
+                    if (isToday) {
+                        cell.style.outline = "1.5px solid rgba(139,92,246,0.9)";
+                        cell.style.outlineOffset = "1px";
+                    }
+
+                    // Rich tooltip
+                    const tip = document.createElement("div");
+                    const dateLabel = day.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+
+                    const fData = fastMap[k];
+                    const wMl  = waterMap[k];
+                    const wKg  = weightMap[k];
+
+                    let lines = `<div class="font-black text-white mb-1.5 capitalize">${dateLabel}</div>`;
+                    if (fData)  lines += `<div class="flex items-center gap-1.5 mb-0.5"><span class="inline-block size-1.5 rounded-full bg-indigo-400 flex-shrink-0"></span><span class="text-indigo-300">${fData.count} ayuno · ${fData.totalHours.toFixed(0)}h</span></div>`;
+                    if (wMl)    lines += `<div class="flex items-center gap-1.5 mb-0.5"><span class="inline-block size-1.5 rounded-full bg-cyan-400 flex-shrink-0"></span><span class="text-cyan-300">${wMl >= 1000 ? (wMl/1000).toFixed(1)+'L' : wMl+'ml'} agua</span></div>`;
+                    if (wKg)    lines += `<div class="flex items-center gap-1.5"><span class="inline-block size-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span><span class="text-emerald-300">${wKg} kg</span></div>`;
+                    if (!fData && !wMl && !wKg) lines += `<div class="text-slate-600">Sin actividad</div>`;
+
+                    // Always show upwards as requested
+                    const posClass = "bottom-full mb-2";
+
+                    cell.className += " hover:z-[60]"; // Boost cell z-index on hover to prevent overlap
+                    tip.className = `absolute ${posClass} left-1/2 -translate-x-1/2 px-3 py-2 bg-[#0b0b14] border border-white/10 text-[9px] rounded-xl opacity-0 group-hover/cell:opacity-100 pointer-events-none whitespace-nowrap z-[100] shadow-2xl transition-all duration-200`;
+                    tip.innerHTML = lines;
+                    cell.appendChild(tip);
+                }
+
+                col.appendChild(cell);
+            });
+
+            outer.appendChild(col);
+        });
+
+        wrapper.appendChild(outer);
     };
 });
+

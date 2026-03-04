@@ -1,4 +1,5 @@
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, setDoc, getDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { checkAndNotifyAchievements } from "./achievements-manager.js";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase-config.js";
 import { showPrompt, showAlert, showConfirm } from "./modals.js";
@@ -64,6 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
             initHydration();
             initActivityChart();
             initStats();
+            initNotifications();
+            checkAndNotifyAchievements(user.uid);
         } else {
             window.location.href = "login.html";
         }
@@ -480,6 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 timestamp: serverTimestamp()
                             });
                             showAlert("¡Éxito!", "Peso actualizado correctamente", "success");
+                            checkAndNotifyAchievements(currentUser.uid);
                         } catch(e) {
                             showAlert("Error", "Error al guardar: " + e.message, "error");
                         } finally {
@@ -570,6 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     updatedAt: serverTimestamp()
                 }, { merge: true });
                 loadWeeklyHydration();
+                checkAndNotifyAchievements(currentUser.uid);
             } catch(e) {
                 currentWaterMl -= amount;
                 renderGlasses();
@@ -788,5 +793,74 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (bestStreak >= 7) levelEl.innerText = "Nivel Avanzado";
             else levelEl.innerText = "Principiante";
         }
+    };
+
+    const initNotifications = () => {
+        if (!currentUser) return;
+        const notifList = document.getElementById("notifications-list");
+        const notifDot = document.getElementById("notification-dot");
+        
+        const q = query(
+            collection(db, "users", currentUser.uid, "notifications"),
+            orderBy("timestamp", "desc"),
+            limit(10)
+        );
+
+        onSnapshot(q, (snapshot) => {
+            if (!notifList) return;
+            
+            if (snapshot.empty) {
+                notifList.innerHTML = `
+                    <div class="p-6 text-center">
+                        <span class="material-symbols-outlined text-gray-700 text-3xl mb-2">notifications_off</span>
+                        <p class="text-xs text-gray-500">No hay notificaciones nuevas</p>
+                    </div>
+                `;
+                if (notifDot) notifDot.classList.add("hidden");
+            } else {
+                notifList.innerHTML = "";
+                let hasUnread = false;
+                
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (!data.read) hasUnread = true;
+                    
+                    const item = document.createElement("div");
+                    item.className = `p-4 flex items-start gap-3 border-b border-white/5 hover:bg-white/[0.02] transition-colors relative cursor-pointer ${data.read ? 'opacity-50' : ''}`;
+                    
+                    const time = data.timestamp?.toDate ? data.timestamp.toDate().toLocaleDateString([], { month: 'short', day: 'numeric' }) : (data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : "--");
+                    
+                    item.innerHTML = `
+                        <div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                            <span class="material-symbols-outlined text-lg">${data.icon || 'notifications'}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="text-[11px] font-black text-white uppercase tracking-tight truncate">${data.title}</h4>
+                                <span class="text-[9px] text-slate-500 font-bold whitespace-nowrap">${time}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 line-clamp-2 mt-0.5">${data.message}</p>
+                        </div>
+                        ${!data.read ? '<div class="absolute right-3 top-1/2 -translate-y-1/2 size-1.5 bg-primary rounded-full shadow-[0_0_8px_rgba(124,58,237,0.6)]"></div>' : ''}
+                    `;
+                    
+                    item.onclick = async (e) => {
+                        e.stopPropagation();
+                        // Mark as read
+                        if (!data.read) {
+                            await setDoc(doc(db, "users", currentUser.uid, "notifications", docSnap.id), { read: true }, { merge: true });
+                        }
+                        if (data.type === 'achievement') window.location.href = 'badges.html';
+                    };
+                    
+                    notifList.appendChild(item);
+                });
+                
+                if (notifDot) {
+                    if (hasUnread) notifDot.classList.remove("hidden");
+                    else notifDot.classList.add("hidden");
+                }
+            }
+        });
     };
 });

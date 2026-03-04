@@ -479,7 +479,7 @@
             </div>
 
             <!-- Discipline Heatmap Section -->
-            <div class="glass-panel p-8 mb-6 overflow-hidden relative group">
+            <div class="glass-panel p-8 mb-6 relative group">
                 <div class="accent-glow glow-top-left opacity-10"></div>
                 <div class="flex items-center justify-between mb-8 relative z-10">
                     <div class="flex items-center gap-3">
@@ -499,13 +499,17 @@
                     </div>
                 </div>
                 
-                <div class="relative z-10 overflow-x-auto pb-2 scrollbar-hide">
-                    <div id="discipline-heatmap" class="flex gap-1.5 min-w-max">
+                <div class="relative z-10 overflow-x-auto pb-2 pt-24 scrollbar-hide -mt-20">
+                    <div id="discipline-heatmap-wrapper">
                         <!-- Generado dinámicamente -->
                         <div class="text-[10px] text-slate-600 font-bold uppercase tracking-widest py-10 w-full text-center">Calculando trayectoria de hábitos...</div>
                     </div>
                 </div>
-                <p class="text-[9px] text-slate-600 mt-6 font-bold uppercase tracking-widest relative z-10 italic">Basado en registros de ayuno, hidratación y peso de los últimos 90 días</p>
+                <div class="flex items-center gap-5 text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-6 relative z-10">
+                    <div class="flex items-center gap-1.5"><div class="size-2 rounded-sm bg-indigo-500"></div>Ayuno</div>
+                    <div class="flex items-center gap-1.5"><div class="size-2 rounded-sm bg-cyan-500"></div>Hidratación</div>
+                    <div class="flex items-center gap-1.5"><div class="size-2 rounded-sm bg-emerald-500"></div>Peso</div>
+                </div>
             </div>
 
             <!-- Achievements Preview -->

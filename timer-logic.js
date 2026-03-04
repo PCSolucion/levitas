@@ -1,6 +1,7 @@
 import { collection, addDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, doc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase-config.js";
+import { checkAndNotifyAchievements } from "./achievements-manager.js";
 import { showPrompt, showConfirm, showAlert } from "./modals.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -352,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }, { merge: true });
 
             showFastSummary(durationHours, defaultGoalHours, defaultProtocol);
-            
+            checkAndNotifyAchievements(currentUser.uid);
         } catch (e) {
             await showAlert("Error", "Error al guardar el ayuno: " + e.message, "error");
             btnAction.disabled = false;
