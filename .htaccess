@@ -1,0 +1,40 @@
+# ============================================
+# .htaccess para la Aplicación Levitas (Vanilla)
+# Optimizado para: Google Auth + Firebase + Tailwind CDN + Chart.js
+# ============================================
+
+# 1. Asegurar tipos MIME correctos para módulos ES (Crucial para Import Maps)
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType application/javascript .mjs
+    AddType application/json .json
+</IfModule>
+
+# 2. Configuración de Seguridad y CSP (Content Security Policy)
+<IfModule mod_headers.c>
+    # CSP Corregido: Incluye dominios de Tailwind, Chartjs y Firebase
+    Header set Content-Security-Policy "default-src 'self' https://*.google.com https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://www.google-analytics.com https://www.googletagmanager.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https: http: https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.firebaseio.com https://*.firebaseapp.com https://www.google-analytics.com https://decapi.me https://cdn.jsdelivr.net https://cloudflareinsights.com; frame-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://apis.google.com https://www.google.com https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+
+    # Forzar NO CACHÉ (Muy importante para desarrollo y despliegues nuevos)
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+
+    # Cabeceras defensivas estándar
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# 3. Reglas de Redirección y Limpieza de URL
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Ajustar según la carpeta real en el servidor (ej: /levitas/)
+    # RewriteBase /levitas/
+
+    # Si el archivo no existe físicamente, no hacer nada (deja que el servidor maneje el 404 o usa index.html)
+    # RewriteCond %{REQUEST_FILENAME} !-f
+    # RewriteCond %{REQUEST_FILENAME} !-d
+    # RewriteRule . index.html [L]
+</IfModule>
