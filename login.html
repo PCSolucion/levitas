@@ -97,13 +97,20 @@
         }
 
         /* Timer circle glow (purple halo from screenshots) */
-        #dash-circle-progress, .text-[#a78bfa] {
+        #dash-circle-progress, .text-\[#a78bfa\] {
             filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
         }
 
         /* Progress bars matching screenshots */
         .bg-gradient-to-r {
             background: linear-gradient(90deg, #7c3aed, #a78bfa) !important;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         /* Subtle tag/badge styling */
@@ -152,7 +159,7 @@
         }
 
         /* SVG Circle timer - purple glow */
-        svg circle.text-[#a78bfa] {
+        svg circle.text-\[#a78bfa\] {
             stroke: #7c3aed !important;
         }
 
@@ -201,7 +208,7 @@
     <div class="absolute top-0 -left-4 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
     <div class="absolute bottom-0 -right-4 w-72 h-72 bg-secondary/20 rounded-full blur-3xl animate-pulse delay-700"></div>
     
-    <div class="max-w-md w-full glass-effect rounded-3xl p-8 md:p-10 shadow-2xl relative z-10 border border-white/5">
+    <div class="max-w-md w-full glass-panel rounded-3xl p-8 md:p-10 shadow-2xl relative z-10 border border-white/5">
         <div class="text-center mb-10">
             <div class="inline-flex p-3 rounded-2xl bg-primary/10 mb-4 border border-primary/20">
                 <span class="material-symbols-outlined text-primary text-4xl">vital_signs</span>
