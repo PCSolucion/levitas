@@ -360,7 +360,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const options = { day: 'numeric', month: 'long' };
         const dateStr = targetDate.toLocaleDateString('es-ES', options);
 
-        predictionText.innerHTML = `Ritmo: <span class="text-white font-bold">${(dailyLoss * 7).toFixed(1)}kg/sem</span>. Meta de <span class="text-white font-bold">${goals.targetWeight}kg</span> para el <span class="text-primary font-black uppercase text-[13px] tracking-tight">${dateStr}</span>.`;
+        predictionText.innerHTML = `
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Ritmo Actual</span>
+                    <span class="text-white font-black text-xs px-2 py-0.5 bg-white/5 rounded-md border border-white/5 tracking-tight">${(dailyLoss * 7).toFixed(1)}kg/sem</span>
+                </div>
+                <div class="h-px bg-white/5 w-full"></div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[14px] text-primary">flag</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Fecha Estimada (${goals.targetWeight}kg)</span>
+                    </div>
+                    <div class="text-primary font-black uppercase text-[15px] tracking-tight leading-none">${dateStr}</div>
+                </div>
+            </div>
+        `;
         predictionContainer.classList.remove("hidden");
     };
 
