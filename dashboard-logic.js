@@ -75,46 +75,70 @@ document.addEventListener("DOMContentLoaded", () => {
     const initWeightMiniChart = () => {
         const q = query(collection(db, "weights"), where("uid", "==", currentUser.uid));
         onSnapshot(q, (snap) => {
-            const container = document.getElementById("mini-weight-chart");
-            if (!container) return;
+            const chartLine = document.getElementById("chart-line");
+            const chartArea = document.getElementById("chart-area");
+            if (!chartLine || !chartArea) return;
             
             if (snap.empty) {
-                // Placeholder bars if no data
-                container.innerHTML = `
-                    <div class="mini-chart-bar h-[20%] opacity-20"></div>
-                    <div class="mini-chart-bar h-[40%] opacity-20"></div>
-                    <div class="mini-chart-bar h-[30%] opacity-20"></div>
-                `;
+                chartLine.setAttribute("d", "");
+                chartArea.setAttribute("d", "");
                 return;
             }
 
-            let weights = snap.docs.map(doc => doc.data());
-            // Sort ascending by timestamp (oldest first)
-            weights.sort((a, b) => {
-                const ta = a.timestamp?.toMillis() || 0;
-                const tb = b.timestamp?.toMillis() || 0;
-                return ta - tb;
-            });
-            // Keep only the last 5
-            weights = weights.slice(-5).map(data => data.weight);
-
-            const max = Math.max(...weights);
-            const min = Math.min(...weights);
-            const range = max - min || 10;
+            let weights = snap.docs.map(doc => ({
+                weight: Number(doc.data().weight),
+                time: doc.data().timestamp?.toMillis() || 0
+            }));
             
-            container.innerHTML = "";
-            weights.forEach((w, idx) => {
-                // Calculate height relative to min/max to show some trend
-                const height = range === 0 ? 50 : ((w - min) / range * 60) + 20; 
-                const opacity = 0.2 + (idx / weights.length * 0.8);
-                const glow = idx === weights.length - 1 ? "shadow-[0_0_12px_rgba(167,139,250,0.6)]" : "";
-                
-                const bar = document.createElement("div");
-                bar.className = `mini-chart-bar ${glow}`;
-                bar.style.height = `${height}%`;
-                bar.style.opacity = opacity;
-                container.appendChild(bar);
+            // Sort by time ascending
+            weights.sort((a,b) => a.time - b.time);
+            
+            // Keep last 7 results for a week's view
+            const recentWeights = weights.slice(-7).map(w => w.weight);
+            if (recentWeights.length < 2) {
+                // Not enough data for a line, maybe just a placeholder flat line
+                if (recentWeights.length === 1) {
+                    chartLine.setAttribute("d", "M 0 60 L 400 60");
+                    chartArea.setAttribute("d", "M 0 60 L 400 60 L 400 120 L 0 120 Z");
+                }
+                return;
+            }
+
+            const max = Math.max(...recentWeights);
+            const min = Math.min(...recentWeights);
+            const range = max - min || 5; // Avoid div by zero
+            
+            // Generate Points
+            const width = 400;
+            const height = 120;
+            const padding = 20;
+            const stepX = width / (recentWeights.length - 1);
+            
+            const points = recentWeights.map((w, i) => {
+                const x = i * stepX;
+                // Inverse Y (higher weight = lower Y value)
+                const y = padding + (height - padding * 2) * (1 - (w - min) / range);
+                return { x, y };
             });
+
+            // Construct Path (using quadratic Bezier mapping for smoothness)
+            let lineD = `M ${points[0].x} ${points[0].y}`;
+            for (let i = 0; i < points.length - 1; i++) {
+                const p0 = points[i];
+                const p1 = points[i+1];
+                const cpX = p0.x + (p1.x - p0.x) / 2;
+                lineD += ` L ${p1.x} ${p1.y}`; // We'll keep it L for a sharp scientific look or build a curve
+                // Actually, let's use Cubic Bezier for "Ultra Premium" smoothness
+                // Let's stick to L for now as simple trend line is clearer, or construct it:
+            }
+            
+            // Let's use the points to create a smooth line
+            const pathData = points.reduce((acc, p, i, a) => {
+                return i === 0 ? `M ${p.x},${p.y}` : `${acc} L ${p.x},${p.y}`;
+            }, "");
+
+            chartLine.setAttribute("d", pathData);
+            chartArea.setAttribute("d", `${pathData} L ${width},${height} L 0,${height} Z`);
         });
     };
 
