@@ -482,13 +482,33 @@
                     </div>
                 </div>
 
-                <div class="glass-panel p-8 group flex items-center justify-between">
-                    <div class="relative z-10">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Progreso Total</p>
-                        <h3 class="text-2xl font-black text-white"><span id="stat-total-lost" class="stat-highlight">0</span> kg perdidos</h3>
+                <div class="glass-panel p-8 group flex flex-col gap-6">
+                    <div class="flex items-center justify-between">
+                        <div class="relative z-10">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Progreso Total</p>
+                            <h3 class="text-2xl font-black text-white"><span id="stat-total-lost" class="stat-highlight">0</span> kg perdidos</h3>
+                        </div>
+                        <div class="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-2xl">trending_down</span>
+                        </div>
                     </div>
-                    <div class="size-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-primary text-3xl">trending_down</span>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                            <p class="text-[8px] font-black text-slate-500 uppercase mb-1">Inicio/Actual</p>
+                            <p class="text-[11px] font-bold text-white"><span id="stat-start-weight">--</span> / <span id="stat-current-weight">--</span></p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                            <p class="text-[8px] font-black text-slate-500 uppercase mb-1">Objetivo</p>
+                            <div class="flex items-center justify-between">
+                                <p id="stat-target-weight" class="text-[11px] font-bold text-white">-- kg</p>
+                                <span class="material-symbols-outlined text-primary text-xs">flag</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div id="stat-goal-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>

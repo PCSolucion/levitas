@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const goalWeightEl = document.getElementById("goal-weight-display");
     const historyTbody = document.getElementById("weight-history-tbody");
     const btnAddWeight = document.getElementById("btn-add-weight");
+    const totalLossEl = document.getElementById("total-loss-display");
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -136,12 +137,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    let startingWeight = null;
+
+    const updateTotalLoss = () => {
+        if (!totalLossEl || startingWeight === null || !currentWeights.length) return;
+        const current = currentWeights[0].weight;
+        const lost = startingWeight - current;
+        totalLossEl.innerText = lost.toFixed(1);
+    };
+
     const loadGoals = () => {
         const userRef = doc(db, "users", currentUser.uid);
         onSnapshot(userRef, (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
                 heightCm = Number(data.height) || 175;
+                startingWeight = Number(data.startingWeight) || null;
                 if(goalWeightEl) {
                     const target = data.targetWeight || "--";
                     goalWeightEl.innerHTML = `${target} <span class="text-sm font-medium text-slate-500">kg</span>`;
@@ -150,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (currentWeights.length) {
                     renderHistoryTable();
                     updateBmiDisplays();
+                    updateTotalLoss();
                 }
             }
         });
@@ -261,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             renderHistoryTable();
             updateBmiDisplays();
+            updateTotalLoss();
             initChart(chartLabels, chartData, []); // Trend data omitted for simplicity here
         });
     };

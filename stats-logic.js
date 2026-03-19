@@ -51,29 +51,33 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const [goalsSnap, weightsSnap] = await Promise.all([getDoc(doc(db, "users", currentUser.uid)), getDocs(qWeights)]);
 
-        if (goalsSnap.exists() && goalsSnap.data().startingWeight) {
+        if (goalsSnap.exists()) {
             const goals = goalsSnap.data();
-            if(startWeightEl) startWeightEl.innerText = `${goals.startingWeight} kg`;
-            if(targetWeightEl) targetWeightEl.innerText = `${goals.targetWeight} kg`;
+            const startW = Number(goals.startingWeight) || 0;
+            const targetW = Number(goals.targetWeight) || 0;
+
+            if(startWeightEl) startWeightEl.innerText = `${startW} kg`;
+            if(targetWeightEl) targetWeightEl.innerText = `${targetW} kg`;
             
-            if (!weightsSnap.empty) {
-                let docsSorted = weightsSnap.docs.slice().sort((a,b) => {
-                    const ta = a.data().timestamp?.toMillis() || 0;
-                    const tb = b.data().timestamp?.toMillis() || 0;
-                    return tb - ta;
-                });
-                const currentWeight = docsSorted[0].data().weight;
+            const currentWeight = !weightsSnap.empty 
+                ? Number(weightsSnap.docs.map(d => d.data()).sort((a,b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0))[0].weight)
+                : (Number(goals.currentWeight) || Number(goals.startingWeight) || 0);
+
+            if (currentWeight) {
                 if(currentWeightEl) currentWeightEl.innerText = `${currentWeight.toFixed(1)} kg`;
-                const lost = goals.startingWeight - currentWeight;
+                const lost = startW - currentWeight;
                 if(totalLostEl) totalLostEl.innerHTML = `${lost.toFixed(1)}<span class="text-xl text-slate-500 font-normal ml-1">kg</span>`;
-                const progress = (goals.startingWeight - goals.targetWeight) > 0 
-                    ? Math.max(0, Math.min(((goals.startingWeight - currentWeight) / (goals.startingWeight - goals.targetWeight)) * 100, 100))
+                
+                const progress = (startW - targetW) > 0 
+                    ? Math.max(0, Math.min(((startW - currentWeight) / (startW - targetW)) * 100, 100))
                     : 0;
                 if(progressBar) progressBar.style.width = `${progress}%`;
+            }
 
+            if (!weightsSnap.empty) {
                 // Weekly Average Calculation
                 const weeklyAvgEl = document.getElementById("stat-weekly-avg");
-                if (weeklyAvgEl && !weightsSnap.empty) {
+                if (weeklyAvgEl) {
                     const now = Date.now();
                     const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
                     const recentWeights = weightsSnap.docs
