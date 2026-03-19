@@ -699,102 +699,131 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const initActivityChart = async () => {
-        const container = document.getElementById("activity-chart-container");
-        const trendEl = document.getElementById("activity-trend");
-        if (!container) return;
+    // Helper for consistent YYYY-MM-DD local format
+    const getYMD = (dateObj) => {
+        const d = new Date(dateObj);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
 
-        try {
-            const last7Days = [];
-            const daysLabels = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
-            const now = new Date();
-            
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(now.getDate() - i);
-                last7Days.push({
-                    date: d.toLocaleDateString('en-CA'),
-                    label: daysLabels[d.getDay()],
-                    dayNum: d.getDate().toString().padStart(2, '0'),
-                    isToday: i === 0
-                });
-            }
+    const initActivityChart = () => {
+        const wrapper = document.getElementById("discipline-heatmap-wrapper");
+        if (!wrapper) return;
 
-            // Get start of 7 days ago
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            weekAgo.setHours(0,0,0,0);
+        // Current week only
+        const DAYS = 7;
+        const now = new Date();
+        const startDay = new Date();
+        // Start from Monday of the current week
+        const dayOfWeek = (now.getDay() + 6) % 7; // 0=Mon ... 6=Sun
+        startDay.setDate(now.getDate() - dayOfWeek);
+        startDay.setHours(0, 0, 0, 0);
+        const startTime = startDay.getTime();
 
-            // Simplified query to the absolute maximum for stability
-            const q = query(
-                collection(db, "fasts"), 
-                where("uid", "==", currentUser.uid)
-            );
-            
-            const snap = await getDocs(q);
-            const activityData = {};
-            
-            // Sort descending locally to avoid requiring composite indexes
-            let docsSorted = snap.docs.slice().sort((a,b) => {
-                const ta = a.data().createdAt?.toMillis() || 0;
-                const tb = b.data().createdAt?.toMillis() || 0;
-                return tb - ta;
-            });
-            
-            docsSorted.forEach(doc => {
-                const d = doc.data();
-                if (d && d.endTime) {
-                    const dateObj = d.endTime.toDate ? d.endTime.toDate() : new Date(d.endTime.seconds * 1000);
-                    if (dateObj >= weekAgo) {
-                        const dateStr = dateObj.toLocaleDateString('en-CA');
-                        activityData[dateStr] = (activityData[dateStr] || 0) + (d.actualHours || 0);
-                    }
-                }
+        const qFasts = query(collection(db, "fasts"), where("uid", "==", currentUser.uid));
+        const qWeights = query(collection(db, "weights"), where("uid", "==", currentUser.uid));
+        const qWater = query(collection(db, "waterLogs"), where("uid", "==", currentUser.uid));
+
+        onSnapshot(qFasts, async (fastsSnap) => {
+            const weightsSnap = await getDocs(qWeights);
+            const waterSnap = await getDocs(qWater);
+
+            const fastMap = {};   
+            const waterMap = {};  
+            const weightMap = {}; 
+
+            fastsSnap.forEach(d => {
+                const raw = d.data().createdAt || d.data().startTime;
+                if (!raw) return;
+                const dateObj = raw.toDate ? raw.toDate() : new Date(raw);
+                if (dateObj.getTime() < startTime) return;
+                const k = dateObj.toDateString();
+                if (!fastMap[k]) fastMap[k] = { count: 0, totalHours: 0 };
+                fastMap[k].count++;
+                fastMap[k].totalHours += d.data().actualHours || 0;
             });
 
-            // Calculate average and trend
-            const values = Object.values(activityData);
-            const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-            const todayStr = now.toLocaleDateString('en-CA');
-            const todayVal = activityData[todayStr] || 0;
+            weightsSnap.forEach(d => {
+                const raw = d.data().timestamp;
+                if (!raw) return;
+                const dateObj = raw.toDate ? raw.toDate() : new Date(raw);
+                if (dateObj.getTime() < startTime) return;
+                const k = dateObj.toDateString();
+                weightMap[k] = d.data().weight;
+            });
 
-            if (trendEl) {
-                if (todayVal > avg && avg > 0) {
-                    trendEl.classList.remove("hidden");
-                    trendEl.innerText = "¡Ritmo +!";
-                    trendEl.className = "text-[9px] font-black uppercase tracking-tighter text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md";
-                } else if (todayVal > 0) {
-                    trendEl.classList.remove("hidden");
-                    trendEl.innerText = "Ritmo Estable";
-                    trendEl.className = "text-[9px] font-black uppercase tracking-tighter text-slate-500 bg-white/5 px-2 py-1 rounded-md";
-                } else {
-                    trendEl.classList.add("hidden");
-                }
-            }
+            waterSnap.forEach(d => {
+                const dateField = d.data().date;
+                if (!dateField) return;
+                const dateObj = new Date(dateField + "T12:00:00");
+                if (dateObj.getTime() < startTime) return;
+                const k = dateObj.toDateString();
+                waterMap[k] = (waterMap[k] || 0) + (d.data().amount_ml || 0);
+            });
 
-            container.innerHTML = "";
-            last7Days.forEach(day => {
-                const hours = activityData[day.date] || 0;
-                const height = Math.min((hours / 24) * 100, 100);
+            const score = (k) => {
+                let s = 0;
+                if (fastMap[k])  s += Math.min(2, fastMap[k].count * 2);
+                if (waterMap[k]) s += 1;
+                if (weightMap[k]) s += 1;
+                return s;
+            };
+
+            const cellColor = (s) => {
+                if (s === 0) return "bg-white/5";
+                if (s <= 1)  return "bg-indigo-500/25";
+                if (s <= 2)  return "bg-indigo-500/50";
+                if (s <= 3)  return "bg-indigo-500/75";
+                return "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]";
+            };
+
+            const DAYS_ES = ["L", "M", "X", "J", "V", "S", "D"];
+            wrapper.innerHTML = "";
+            
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(startDay);
+                d.setDate(d.getDate() + i);
+                const k = d.toDateString();
+                const s = score(k);
+                const isToday = k === now.toDateString();
+                const isFuture = d > now;
+
+                const dayCol = document.createElement("div");
+                dayCol.className = "flex flex-col items-center gap-3";
+
+                const label = document.createElement("span");
+                label.className = `text-[9px] font-black uppercase tracking-tighter ${isToday ? 'text-primary' : 'text-slate-600'}`;
+                label.innerText = DAYS_ES[i];
+
+                const cell = document.createElement("div");
+                cell.className = `size-8 md:size-10 rounded-lg transition-all duration-300 relative group/cell ${isFuture ? 'opacity-20' : ''}`;
+                cell.classList.add(...cellColor(s).split(' '));
                 
-                const barWrapper = document.createElement("div");
-                barWrapper.className = "flex flex-col items-center gap-2.5 flex-1";
-                barWrapper.innerHTML = `
-                    <div class="w-full bg-white/5 rounded-t-lg relative h-32 overflow-hidden border ${day.isToday ? 'border-primary/20 bg-primary/10' : 'border-white/5'}">
-                        <div class="absolute bottom-0 w-full bg-gradient-to-t ${day.isToday ? 'from-primary to-accent shadow-[0_0_15px_rgba(124,58,237,0.4)]' : 'from-primary/20 to-primary/40'} transition-all rounded-t-sm" style="height: ${height > 0 ? height : 5}%"></div>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5">
-                        <span class="text-[10px] ${day.isToday ? 'text-primary font-bold' : 'text-slate-500 font-black'} uppercase tracking-tighter">${day.label}</span>
-                        <span class="text-[8px] ${day.isToday ? 'text-primary/70' : 'text-slate-600'} font-bold">${day.dayNum}</span>
-                    </div>
-                `;
-                container.appendChild(barWrapper);
-            });
-        } catch (error) {
-            console.error("Error loading activity chart:", error);
-            // Fallback to empty bars if query failure (mostly due to missing index)
-            container.innerHTML = "<p class='text-[10px] text-slate-500 w-full text-center'>Cargando actividad...</p>";
-        }
+                if (isToday) {
+                    cell.style.outline = "2px solid #7c3aed";
+                    cell.style.outlineOffset = "2px";
+                }
+
+                if (!isFuture) {
+                    const tooltip = document.createElement("div");
+                    tooltip.className = "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0b0b14] border border-white/10 text-[9px] rounded-xl opacity-0 group-hover/cell:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-2xl transition-all duration-200";
+                    
+                    const dateLabel = d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+                    let lines = `<div class="font-black text-white mb-1.5 capitalize">${dateLabel}</div>`;
+                    
+                    if (fastMap[k]) lines += `<div class="flex items-center gap-1.5 mb-0.5"><span class="size-1 rounded-full bg-indigo-400"></span><span class="text-indigo-300">${fastMap[k].count} ayuno</span></div>`;
+                    if (waterMap[k]) lines += `<div class="flex items-center gap-1.5 mb-0.5"><span class="size-1 rounded-full bg-cyan-400"></span><span class="text-cyan-300">${(waterMap[k]/1000).toFixed(1)}L agua</span></div>`;
+                    if (weightMap[k]) lines += `<div class="flex items-center gap-1.5"><span class="size-1 rounded-full bg-emerald-400"></span><span class="text-emerald-300">${weightMap[k]}kg</span></div>`;
+                    if (!fastMap[k] && !waterMap[k] && !weightMap[k]) lines += `<div class="text-slate-600 italic">Sin actividad</div>`;
+                    
+                    tooltip.innerHTML = lines;
+                    cell.appendChild(tooltip);
+                }
+
+                dayCol.appendChild(label);
+                dayCol.appendChild(cell);
+                wrapper.appendChild(dayCol);
+            }
+        });
     };
 
     const initStats = async () => {

@@ -721,18 +721,34 @@
         </div>
     </div>
 
-    <!-- Weekly Activity (Now Side Case) -->
-    <div class="lg:col-span-4 glass-panel p-8 border border-white/5 shadow-sm">
-        <div class="premium-card-header justify-between">
+    <!-- Weekly Activity (Discipline Map Style) -->
+    <div class="lg:col-span-4 glass-panel p-8 border border-white/5 shadow-sm relative group">
+        <div class="accent-glow glow-top-left opacity-10"></div>
+        <div class="premium-card-header justify-between relative z-10">
             <div class="flex items-center gap-3">
-                <div class="premium-icon-box" style="width:36px; height:36px;"><span class="material-symbols-outlined" style="font-size:20px;">bar_chart</span></div>
+                <div class="premium-icon-box" style="width:36px; height:36px;"><span class="material-symbols-outlined" style="font-size:20px;">grid_view</span></div>
                 <span class="card-label">Actividad Semanal</span>
             </div>
-            <span id="activity-trend" class="text-[9px] font-black uppercase tracking-tighter text-slate-500 bg-white/5 px-2 py-1 rounded-md hidden">Ritmo Estable</span>
+            <div class="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                <div class="flex gap-1">
+                    <div class="size-2 rounded-sm bg-white/5"></div>
+                    <div class="size-2 rounded-sm bg-indigo-500/50"></div>
+                    <div class="size-2 rounded-sm bg-indigo-500"></div>
+                </div>
+            </div>
         </div>
         
-        <div id="activity-chart-container" class="h-44 w-full flex items-end justify-between gap-1.5 px-1 mt-6">
-            <!-- Dynamically populated by JS -->
+        <div class="relative z-10 mt-6 h-44 flex flex-col justify-center">
+            <div id="discipline-heatmap-wrapper" class="flex justify-between items-center w-full px-2">
+                <!-- Generado dinámicamente: Solo la semana actual -->
+                <div class="text-[10px] text-slate-600 font-bold uppercase tracking-widest w-full text-center">Calculando...</div>
+            </div>
+            
+            <div class="flex items-center justify-between text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-8 px-2">
+                <div class="flex items-center gap-1.5"><div class="size-2 rounded-sm bg-indigo-500"></div>Ayuno</div>
+                <div class="flex items-center gap-1.5"><div class="size-2 rounded-sm bg-cyan-500"></div>Hidra.</div>
+                <div class="flex items-center gap-1.5"><div class="size-2 rounded-sm bg-emerald-500"></div>Peso</div>
+            </div>
         </div>
     </div>
 </div>
