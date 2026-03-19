@@ -809,6 +809,22 @@ document.addEventListener("DOMContentLoaded", () => {
         onSnapshot(q, (snapshot) => {
             if (!notifList) return;
             
+            const markAllBtn = document.getElementById("mark-all-read");
+            if (markAllBtn) {
+                if (snapshot.empty || !snapshot.docs.some(d => !d.data().read)) {
+                    markAllBtn.classList.add("hidden");
+                } else {
+                    markAllBtn.classList.remove("hidden");
+                    markAllBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const batchPromises = snapshot.docs
+                            .filter(d => !d.data().read)
+                            .map(d => setDoc(doc(db, "users", currentUser.uid, "notifications", d.id), { read: true }, { merge: true }));
+                        await Promise.all(batchPromises);
+                    };
+                }
+            }
+
             if (snapshot.empty) {
                 notifList.innerHTML = `
                     <div class="p-6 text-center">
@@ -826,17 +842,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!data.read) hasUnread = true;
                     
                     const item = document.createElement("div");
-                    item.className = `p-4 flex items-start gap-3 border-b border-white/5 hover:bg-white/[0.02] transition-colors relative cursor-pointer ${data.read ? 'opacity-50' : ''}`;
+                    item.className = `p-4 flex items-start gap-3 border-b border-white/5 hover:bg-white/[0.05] transition-colors relative cursor-pointer group ${data.read ? 'opacity-50' : ''}`;
                     
                     const time = data.timestamp?.toDate ? data.timestamp.toDate().toLocaleDateString([], { month: 'short', day: 'numeric' }) : (data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : "--");
                     
                     item.innerHTML = `
-                        <div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <div class="size-8 rounded-lg ${data.read ? 'bg-white/5' : 'bg-primary/10'} flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-lg">${data.icon || 'notifications'}</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start gap-2">
-                                <h4 class="text-[11px] font-black text-white uppercase tracking-tight truncate">${data.title}</h4>
+                                <h4 class="text-[11px] font-black ${data.read ? 'text-slate-400' : 'text-white'} uppercase tracking-tight truncate">${data.title}</h4>
                                 <span class="text-[9px] text-slate-500 font-bold whitespace-nowrap">${time}</span>
                             </div>
                             <p class="text-[10px] text-slate-400 line-clamp-2 mt-0.5">${data.message}</p>
@@ -850,7 +866,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (!data.read) {
                             await setDoc(doc(db, "users", currentUser.uid, "notifications", docSnap.id), { read: true }, { merge: true });
                         }
-                        if (data.type === 'achievement') window.location.href = 'badges.html';
+                        
+                        // Action based on type
+                        if (data.type === 'achievement') {
+                            window.location.href = 'badges.html';
+                        } else if (data.type === 'fasting') {
+                            window.location.href = 'timer.html';
+                        } else if (data.type === 'weight') {
+                            window.location.href = 'history.html';
+                        }
                     };
                     
                     notifList.appendChild(item);
