@@ -328,7 +328,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const stopFasting = async () => {
         if (!currentUser) return;
         
-        const endTime = Date.now();
+        let endTime = Date.now();
+        const nowIso = new Date(endTime - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        const userInput = await showPrompt(
+            "Terminar Ayuno", 
+            "Confirma o edita la fecha y hora de finalización", 
+            nowIso.replace('T', ' ')
+        );
+
+        if (userInput === undefined || userInput === null) return; // User cancelled
+        
+        if (userInput) {
+            const newDate = new Date(userInput.replace(' ', 'T'));
+            if (!isNaN(newDate.getTime())) {
+                endTime = newDate.getTime();
+            } else {
+                await showAlert("Aviso", "Formato inválido. Se usará la hora actual.", "info");
+                endTime = Date.now();
+            }
+        }
+
         const durationHours = ((endTime - localStartTime) / (1000 * 3600));
         const isSuccessful = durationHours >= defaultGoalHours && durationHours >= 12;
 
