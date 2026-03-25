@@ -95,10 +95,7 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
 
 /* Glowing accents */
         /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
-        @keyframes ekgTrace {
-            0% { 
-                clip-path: inset(0 100% 0 0); 
-                opacity: 0;}
+        @keyframes ekgTrace {\n    0% { clip-path: inset(0 100% 0 0); opacity: 0; }\n    100% { clip-path: inset(0 0 0 0); opacity: 1; }\n}
 
 100% { 
                 clip-path: inset(0 0 0 0);
@@ -294,8 +291,7 @@ input:focus, select:focus, textarea:focus {
 .bg-accent { background: var(--color-primary) !important;}
 
 /* Animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px);}
+        @keyframes fadeInUp {\n    from { opacity: 0; transform: translateY(20px); }\n    to { opacity: 1; transform: translateY(0); }\n}
 
 to { opacity: 1; transform: translateY(0); }}
 
@@ -389,7 +385,7 @@ button.bg-primary:hover,
             color: var(--color-primary-light) !important;}
 
 /* SVG Circle timer - purple glow */
-        svg circle.text-[var(--color-primary-light)] {
+        svg circle.text-\\[#a78bfa\\] {
             stroke: var(--color-primary) !important;}
 
 /* Replicated Premium Dashboard Cards */
@@ -431,10 +427,7 @@ button.bg-primary:hover,
             text-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.4);}
 
 /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
-        @keyframes ekgTrace {
-            0% { 
-                clip-path: inset(0 100% 0 0); 
-                opacity: 0;}
+        @keyframes ekgTrace {\n    0% { clip-path: inset(0 100% 0 0); opacity: 0; }\n    100% { clip-path: inset(0 0 0 0); opacity: 1; }\n}
 
 /* Progress bars */
         .progress-container {
@@ -485,8 +478,7 @@ button.bg-primary:hover,
 .dropdown-content.show {
             display: block;}
 
-@keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px);}
+@keyframes fadeIn {\n    from { opacity: 0; transform: translateY(-5px); }\n    to { opacity: 1; transform: translateY(0); }\n}
 
 /* Mini-chart styling */
         .mini-chart-bar {
@@ -590,8 +582,7 @@ to { opacity: 1; }}
 .animate-fade-in {
             animation: fadeIn 0.8s ease-out both;}
 
-@keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px);}
+@keyframes fadeInUp {\n    from { opacity: 0; transform: translateY(20px); }\n    to { opacity: 1; transform: translateY(0); }\n}
 
 main > header, main > .grid {
             animation: fadeInUp 0.5s ease-out both;}
