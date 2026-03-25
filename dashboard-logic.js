@@ -209,99 +209,126 @@ document.addEventListener("DOMContentLoaded", () => {
         text.innerText = current.t;
     };
 
+    const calculateCurrentStreak = (fasts) => {
+        if (!fasts || fasts.length === 0) return 0;
+        
+        const fastDates = new Set(fasts.map(f => {
+            const data = f.data ? f.data() : f;
+            const date = data.startTime?.toDate ? data.startTime.toDate() : new Date(data.startTime);
+            return date.toDateString();
+        }));
+
+        let streak = 0;
+        let checkDate = new Date();
+        
+        // Check if there's an active fast today (from users doc)
+        // Note: we'll handle this by allowing 1 day gap if they are currently fasting or just finished
+        if (!fastDates.has(checkDate.toDateString())) {
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        while (fastDates.has(checkDate.toDateString())) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+        return streak;
+    };
+
     const initFastCard = async () => {
         if (!currentUser) return;
         
-        // Fetch last fast just in case
-        const q = query(collection(db, "fasts"), where("uid", "==", currentUser.uid));
-        const snap = await getDocs(q);
-        
-        // Sort explicitly by createdAt desc in JS to avoid composite index requirements
-        let allFasts = snap.docs.slice().sort((a,b) => {
-            const ta = a.data().createdAt?.toMillis() || 0;
-            const tb = b.data().createdAt?.toMillis() || 0;
-            return tb - ta;
-        });
-        
+        const qFasts = query(collection(db, "fasts"), where("uid", "==", currentUser.uid));
         const userRef = doc(db, "users", currentUser.uid);
+        
+        let allFasts = [];
+
+        // 1. Listen to fasts history (for streak and last session)
+        onSnapshot(qFasts, (fastsSnap) => {
+            allFasts = fastsSnap.docs.sort((a, b) => {
+                const ta = a.data().startTime?.toMillis ? a.data().startTime.toMillis() : new Date(a.data().startTime).getTime();
+                const tb = b.data().startTime?.toMillis ? b.data().startTime.toMillis() : new Date(b.data().startTime).getTime();
+                return tb - ta;
+            });
+
+            const streak = calculateCurrentStreak(allFasts);
+            if (statBestStreak) statBestStreak.innerText = streak;
+            if (streakLevel) {
+                streakLevel.innerText = streak < 3 ? "Principiante" : streak < 7 ? "Constante" : streak < 21 ? "Avanzado" : "Maestro";
+            }
+            
+            // If No active fast, update the card with the last finished fast
+            getDoc(userRef).then(docSnap => {
+                if (docSnap.exists() && (!docSnap.data().currentFast || !docSnap.data().currentFast.active)) {
+                    updateFastCardUI(docSnap.data(), allFasts);
+                }
+            });
+        });
+
+        // 2. Listen to user doc (for current active fast)
         onSnapshot(userRef, (docSnap) => {
             if (docSnap.exists()) {
-                const data = docSnap.data();
-                if (data.currentFast && data.currentFast.active) {
-                    const startTime = data.currentFast.startTime;
-                    const goalHours = data.currentFast.goalHours || 16;
-                    const selectedProtocol = data.currentFast.protocol || "16:8";
-
-                    if(fastTitle) fastTitle.innerText = "Ayuno Actual";
-                    if(fastSubtitle) fastSubtitle.innerText = selectedProtocol;
-                    const startDate = new Date(startTime);
-                    if(startTimeEl) startTimeEl.innerText = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    if(startDateEl) startDateEl.innerText = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                    const goalDate = new Date(startTime + (goalHours * 3600 * 1000));
-                    if(goalTimeEl) goalTimeEl.innerText = goalDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    if(goalStatusEl) {
-                        goalStatusEl.innerText = "En progreso";
-                        goalStatusEl.classList.remove("text-green-500");
-                    }
-                    
-                    btnAction.classList.replace("bg-primary/10", "bg-accent");
-                    btnAction.classList.replace("text-primary", "text-white");
-                    if(actionIcon) actionIcon.innerText = "timer";
-                    if(actionText) actionText.innerText = "Ir al Temporizador";
-                    btnAction.onclick = () => window.location.href = "timer.html";
-                    if (timerInterval) clearInterval(timerInterval);
-                    timerInterval = setInterval(() => updateTimer(startTime, goalHours), 60000);
-                    updateTimer(startTime, goalHours);
-                } else {
-                    if (timerInterval) clearInterval(timerInterval);
-                    if(fastTitle) fastTitle.innerText = "Último Ayuno";
-                    if(timerDisplay) timerDisplay.innerText = "--:--";
-                    if(goalStatusEl) {
-                        goalStatusEl.innerText = "--";
-                        goalStatusEl.classList.remove("text-green-500");
-                    }
-                    if(startTimeEl) startTimeEl.innerText = "--:--";
-                    if(startDateEl) startDateEl.innerText = "--";
-                    if(goalTimeEl) goalTimeEl.innerText = "--:--";
-                    if(progressCircle) progressCircle.style.strokeDashoffset = 540;
-                    
-                    btnAction.onclick = () => window.location.href = "timer.html";
-                    if(btnAction.classList.contains("bg-accent")) {
-                        btnAction.classList.replace("bg-accent", "bg-primary/10");
-                        btnAction.classList.replace("text-white", "text-primary");
-                    }
-                    if(actionIcon) actionIcon.innerText = "play_circle";
-                    if(actionText) actionText.innerText = "Iniciar Ayuno";
-                    
-                    if (allFasts.length > 0) {
-                        const last = allFasts[0].data();
-                                                if(fastSubtitle) fastSubtitle.innerText = `${last.protocol} Completado`;
-                        if(timerDisplay) timerDisplay.innerText = `${Math.floor(last.actualHours)}h`;
-                        if(timerLabel) timerLabel.innerText = "Duración Total";
-
-                        // Calculate Streak
-                        const fastDates = new Set(allFasts.map(f => f.data().startTime?.toDate().toDateString()));
-                        let streak = 0;
-                        let checkDate = new Date();
-                        // Allows missing today if they fasted yesterday
-                        if (!fastDates.has(checkDate.toDateString())) {
-                            checkDate.setDate(checkDate.getDate() - 1);
-                        }
-                        while (fastDates.has(checkDate.toDateString())) {
-                            streak++;
-                            checkDate.setDate(checkDate.getDate() - 1);
-                        }
-                        if(statBestStreak) statBestStreak.innerText = streak;
-                        if(streakLevel) {
-                            streakLevel.innerText = streak < 3 ? "Principiante" : streak < 7 ? "Constante" : streak < 21 ? "Avanzado" : "Maestro";
-                        }
-                    } else {
-                        if(fastSubtitle) fastSubtitle.innerText = "Sin ayunos registrados";
-                        if(timerLabel) timerLabel.innerText = "Listo para empezar";
-                    }
-                }
+                updateFastCardUI(docSnap.data(), allFasts);
             }
         });
+    };
+
+    const updateFastCardUI = (userData, allFasts) => {
+        if (userData.currentFast && userData.currentFast.active) {
+            const startTime = userData.currentFast.startTime;
+            const goalHours = userData.currentFast.goalHours || 16;
+            const selectedProtocol = userData.currentFast.protocol || "16:8";
+
+            if(fastTitle) fastTitle.innerText = "Ayuno Actual";
+            if(fastSubtitle) fastSubtitle.innerText = selectedProtocol;
+            const startDate = new Date(startTime);
+            if(startTimeEl) startTimeEl.innerText = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if(startDateEl) startDateEl.innerText = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const goalDate = new Date(startTime + (goalHours * 3600 * 1000));
+            if(goalTimeEl) goalTimeEl.innerText = goalDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if(goalStatusEl) {
+                goalStatusEl.innerText = "En progreso";
+                goalStatusEl.classList.remove("text-green-500");
+            }
+            
+            btnAction.classList.replace("bg-primary/10", "bg-accent");
+            btnAction.classList.replace("text-primary", "text-white");
+            if(actionIcon) actionIcon.innerText = "timer";
+            if(actionText) actionText.innerText = "Ir al Temporizador";
+            btnAction.onclick = () => window.location.href = "timer.html";
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => updateTimer(startTime, goalHours), 60000);
+            updateTimer(startTime, goalHours);
+        } else {
+            if (timerInterval) clearInterval(timerInterval);
+            if(fastTitle) fastTitle.innerText = "Último Ayuno";
+            if(timerDisplay) timerDisplay.innerText = "--:--";
+            if(goalStatusEl) {
+                goalStatusEl.innerText = "--";
+                goalStatusEl.classList.remove("text-green-500");
+            }
+            if(startTimeEl) startTimeEl.innerText = "--:--";
+            if(startDateEl) startDateEl.innerText = "--";
+            if(goalTimeEl) goalTimeEl.innerText = "--:--";
+            if(progressCircle) progressCircle.style.strokeDashoffset = 540;
+            
+            btnAction.onclick = () => window.location.href = "timer.html";
+            if(btnAction.classList.contains("bg-accent")) {
+                btnAction.classList.replace("bg-accent", "bg-primary/10");
+                btnAction.classList.replace("text-white", "text-primary");
+            }
+            if(actionIcon) actionIcon.innerText = "play_circle";
+            if(actionText) actionText.innerText = "Iniciar Ayuno";
+            
+            if (allFasts.length > 0) {
+                const last = allFasts[0].data();
+                if(fastSubtitle) fastSubtitle.innerText = `${last.protocol} Completado`;
+                if(timerDisplay) timerDisplay.innerText = `${Math.floor(last.actualHours)}h`;
+                if(timerLabel) timerLabel.innerText = "Duración Total";
+            } else {
+                if(fastSubtitle) fastSubtitle.innerText = "Sin ayunos registrados";
+                if(timerLabel) timerLabel.innerText = "Listo para empezar";
+            }
+        }
     };
 
     const updateWeightPrediction = (wSnap, goals) => {
@@ -843,24 +870,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const initStats = async () => {
         if (!currentUser) return;
+        
+        // Best Streak handling - we separate this from Current Streak
         const statsRef = doc(db, "stats", currentUser.uid);
-        const statsSnap = await getDoc(statsRef);
-        
-        let bestStreak = 0;
-        if (statsSnap.exists()) {
-            bestStreak = statsSnap.data().bestStreak || 0;
-        }
-
-        const streakEl = document.getElementById("stat-best-streak");
-        const levelEl = document.getElementById("streak-level");
-        
-        if (streakEl) streakEl.innerText = bestStreak;
-        if (levelEl) {
-            if (bestStreak >= 30) levelEl.innerText = "Nivel Maestro";
-            else if (bestStreak >= 15) levelEl.innerText = "Nivel Experto";
-            else if (bestStreak >= 7) levelEl.innerText = "Nivel Avanzado";
-            else levelEl.innerText = "Principiante";
-        }
+        onSnapshot(statsRef, (statsSnap) => {
+            if (statsSnap.exists()) {
+                const bestStreak = statsSnap.data().bestStreak || 0;
+                // If we had a Best Streak display element we'd update it here.
+                // Currently stat-best-streak is being used for Current Streak in the UI.
+            }
+        });
     };
 
     const initNotifications = () => {

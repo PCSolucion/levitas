@@ -1,4 +1,4 @@
-import { collection, addDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, doc, setDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase-config.js";
 import { checkAndNotifyAchievements } from "./achievements-manager.js";
@@ -617,6 +617,127 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    let groupedFasts = {};
+    let selectedYear = new Date().getFullYear();
+    let selectedMonth = new Date().getMonth();
+
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    const renderTabs = () => {
+        const yearTabs = document.getElementById("year-tabs");
+        const monthTabs = document.getElementById("month-tabs");
+        if (!yearTabs || !monthTabs) return;
+
+        yearTabs.innerHTML = "";
+        monthTabs.innerHTML = "";
+
+        const years = Object.keys(groupedFasts).sort((a, b) => b - a);
+        if (years.length === 0) return;
+
+        // Years
+        years.forEach(year => {
+            const btn = document.createElement("button");
+            btn.className = `px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${selectedYear == year ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-slate-500 hover:text-white'}`;
+            btn.innerText = year;
+            btn.onclick = () => {
+                selectedYear = year;
+                const availableMonths = Object.keys(groupedFasts[selectedYear]);
+                if (!availableMonths.includes(selectedMonth.toString())) {
+                    selectedMonth = Math.max(...availableMonths.map(Number));
+                }
+                renderTabs();
+                renderFastsList();
+            };
+            yearTabs.appendChild(btn);
+        });
+
+        // Months for selected year
+        if (groupedFasts[selectedYear]) {
+            const months = Object.keys(groupedFasts[selectedYear]).sort((a, b) => b - a);
+            months.forEach(month => {
+                const btn = document.createElement("button");
+                btn.className = `px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${selectedMonth == month ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-slate-500 hover:text-white'}`;
+                btn.innerText = monthNames[month];
+                btn.onclick = () => {
+                    selectedMonth = month;
+                    renderTabs();
+                    renderFastsList();
+                };
+                monthTabs.appendChild(btn);
+            });
+        }
+    };
+
+    const renderFastsList = () => {
+        if (!recentFastsContainer) return;
+        recentFastsContainer.innerHTML = "";
+        
+        const fasts = (groupedFasts[selectedYear] && groupedFasts[selectedYear][selectedMonth]) || [];
+        
+        if (fasts.length === 0) {
+            recentFastsContainer.innerHTML = '<p class="col-span-full text-center text-xs text-slate-500 py-8">No hay registros para este periodo.</p>';
+            return;
+        }
+
+        fasts.forEach(fast => {
+            const data = fast.data;
+            const id = fast.id;
+            const startDate = data.startTime?.toDate ? data.startTime.toDate() : new Date(data.startTime);
+            const dateStr = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            
+            const fastItem = document.createElement("div");
+            fastItem.className = "bg-white/[0.02] border border-white/5 p-5 rounded-2xl hover:bg-white/[0.05] transition-all group relative overflow-hidden";
+            
+            const successColor = data.success ? 'emerald' : 'orange';
+            const icon = data.success ? 'check_circle' : 'cancel';
+
+            fastItem.innerHTML = `
+                <div class="flex flex-col gap-4 relative z-10">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-3">
+                            <div class="premium-icon-box !size-8 !bg-${successColor}-500/10 !text-${successColor}-500 !border-${successColor}-500/20">
+                                <span class="material-symbols-outlined text-base">${icon}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <h4 class="text-[11px] font-black text-white uppercase tracking-widest">Protocolo ${data.protocol}</h4>
+                                <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">${dateStr}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex flex-col items-end">
+                                <span class="text-lg font-black text-white leading-none">${data.actualHours}<span class="text-[10px] text-slate-500 ml-0.5">h</span></span>
+                                <span class="text-[8px] font-black ${data.success ? 'text-emerald-500' : 'text-orange-500'} uppercase tracking-widest">${data.success ? 'Completado' : 'Interrumpido'}</span>
+                            </div>
+                            <button class="size-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all btn-delete-fast" data-id="${id}">
+                                <span class="material-symbols-outlined text-base">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Mini Progress Bar -->
+                    <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-${successColor}-500 transition-all duration-1000" style="width: ${Math.min(100, (data.actualHours / data.goalHours) * 100)}%"></div>
+                    </div>
+                </div>
+                <div class="accent-glow !size-24 -bottom-10 -right-10 !bg-${successColor}-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            `;
+            
+            fastItem.querySelector(".btn-delete-fast").onclick = async (e) => {
+                e.stopPropagation();
+                if (await showConfirm("Eliminar ayuno", "¿Estás seguro de que quieres eliminar este registro de ayuno?")) {
+                    try {
+                        await deleteDoc(doc(db, "fasts", id));
+                        // snapshot will update automatically
+                    } catch (err) {
+                        showAlert("Error", "Error al eliminar: " + err.message, "error");
+                    }
+                }
+            };
+
+            recentFastsContainer.appendChild(fastItem);
+        });
+    };
+
     const loadRecentFasts = () => {
         const q = query(
             collection(db, "fasts"), 
@@ -626,60 +747,54 @@ document.addEventListener("DOMContentLoaded", () => {
             if (snapshot.empty) {
                 if(recentFastsContainer) recentFastsContainer.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Aún no hay ayunos.</p>';
                 personalBestHours = 0;
+                groupedFasts = {};
+                if (document.getElementById("year-tabs")) document.getElementById("year-tabs").innerHTML = "";
+                if (document.getElementById("month-tabs")) document.getElementById("month-tabs").innerHTML = "";
             } else {
-                let allFasts = snapshot.docs.map(doc => doc.data());
+                let allFastsData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
                 
                 // Calculate Personal Best
-                const validHours = allFasts.map(f => f.actualHours || 0).filter(h => h > 0);
+                const validHours = allFastsData.map(f => f.data.actualHours || 0).filter(h => h > 0);
                 personalBestHours = validHours.length > 0 ? Math.max(...validHours) : 0;
 
-                if(!recentFastsContainer) return;
-                recentFastsContainer.innerHTML = "";
-                
-                let sortedDocs = snapshot.docs.slice().sort((a, b) => {
-                    const ta = a.data().createdAt?.toMillis() || 0;
-                    const tb = b.data().createdAt?.toMillis() || 0;
-                    return tb - ta;
-                });
-                
-                let limitDocs = sortedDocs.slice(0, 5);
+                // Group by year and month
+                groupedFasts = {};
+                allFastsData.forEach(fast => {
+                    const data = fast.data;
+                    const date = data.startTime?.toDate ? data.startTime.toDate() : new Date(data.startTime);
+                    const year = date.getFullYear();
+                    const month = date.getMonth();
 
-                limitDocs.forEach(doc => {
-                    const data = doc.data();
-                    const dateStr = data.startTime?.toDate().toLocaleDateString([], { month: 'short', day: 'numeric' }) || "--";
-                    const fastItem = document.createElement("div");
-                    fastItem.className = "bg-white/[0.02] border border-white/5 p-5 rounded-2xl hover:bg-white/[0.05] transition-all group relative overflow-hidden";
-                    
-                    const successColor = data.success ? 'emerald' : 'orange';
-                    const icon = data.success ? 'check_circle' : 'cancel';
-
-                    fastItem.innerHTML = `
-                        <div class="flex flex-col gap-4 relative z-10">
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center gap-3">
-                                    <div class="premium-icon-box !size-8 !bg-${successColor}-500/10 !text-${successColor}-500 !border-${successColor}-500/20">
-                                        <span class="material-symbols-outlined text-base">${icon}</span>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <h4 class="text-[11px] font-black text-white uppercase tracking-widest">Protocolo ${data.protocol}</h4>
-                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">${dateStr}</span>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="text-lg font-black text-white leading-none">${data.actualHours}<span class="text-[10px] text-slate-500 ml-0.5">h</span></span>
-                                    <span class="text-[8px] font-black ${data.success ? 'text-emerald-500' : 'text-orange-500'} uppercase tracking-widest">${data.success ? 'Completado' : 'Interrumpido'}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Mini Progress Bar -->
-                            <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div class="h-full bg-${successColor}-500 transition-all duration-1000" style="width: ${Math.min(100, (data.actualHours / data.goalHours) * 100)}%"></div>
-                            </div>
-                        </div>
-                        <div class="accent-glow !size-24 -bottom-10 -right-10 !bg-${successColor}-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    `;
-                    recentFastsContainer.appendChild(fastItem);
+                    if (!groupedFasts[year]) groupedFasts[year] = {};
+                    if (!groupedFasts[year][month]) groupedFasts[year][month] = [];
+                    groupedFasts[year][month].push(fast);
                 });
+
+                // Sort fasts within each month by date descending
+                Object.keys(groupedFasts).forEach(year => {
+                    Object.keys(groupedFasts[year]).forEach(month => {
+                        groupedFasts[year][month].sort((a, b) => {
+                            const dateA = a.data.startTime?.toMillis ? a.data.startTime.toMillis() : new Date(a.data.startTime).getTime();
+                            const dateB = b.data.startTime?.toMillis ? b.data.startTime.toMillis() : new Date(b.data.startTime).getTime();
+                            return dateB - dateA;
+                        });
+                    });
+                });
+
+                // Default to latest year/month if selected is empty
+                const years = Object.keys(groupedFasts).sort((a, b) => b - a);
+                if (years.length > 0) {
+                    if (!groupedFasts[selectedYear]) {
+                        selectedYear = years[0];
+                    }
+                    const months = Object.keys(groupedFasts[selectedYear]).sort((a, b) => b - a);
+                    if (months.length > 0 && !groupedFasts[selectedYear][selectedMonth]) {
+                        selectedMonth = months[0];
+                    }
+                }
+
+                renderTabs();
+                renderFastsList();
             }
         });
     };

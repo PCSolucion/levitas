@@ -748,14 +748,19 @@
 
                 <!-- Mini History (Full Width) -->
                 <div class="glass-panel flex flex-col overflow-hidden">
-                    <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                    <div class="p-8 border-b border-white/5 flex items-center bg-white/[0.01]">
                         <div class="flex items-center gap-4">
                             <div class="premium-icon-box !bg-primary/10 !text-primary !border-primary/20"><span class="material-symbols-outlined text-lg">history</span></div>
                             <h3 class="text-sm font-black text-white uppercase tracking-[0.2em]">Historial Reciente</h3>
                         </div>
-                        <a href="history.html" class="px-6 py-2 text-[10px] font-black text-primary border border-primary/30 rounded-full hover:bg-primary/10 transition-all uppercase tracking-widest no-underline">
-                            Ver Historial
-                        </a>
+                    </div>
+                    <div class="p-8 pb-0 flex flex-col gap-6">
+                        <div id="year-tabs" class="flex flex-wrap gap-2">
+                            <!-- Year tabs will be injected here -->
+                        </div>
+                        <div id="month-tabs" class="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                            <!-- Month tabs will be injected here -->
+                        </div>
                     </div>
                     <div id="recent-fasts-container" class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[250px]">
                         <p class="col-span-full text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest py-10">Sincronizando datos...</p>
