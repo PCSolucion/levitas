@@ -32,7 +32,7 @@
             font-family: "Space Grotesk", sans-serif;
             color: var(--text-main);
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--bg-darkest) 0%, var(--bg-darker) 50%, var(--bg-darkest) 100%);}
+            background: linear-gradient(135deg, #0a0a0f 0%, #0d0d16 50%, #0a0a0f 100%);}
 
 h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
             font-family: "Outfit", sans-serif;}
@@ -87,7 +87,7 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
         .stat-highlight {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff 0%, var(--color-primary-light) 100%);
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -95,7 +95,10 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
 
 /* Glowing accents */
         /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
-        @keyframes ekgTrace {\n    0% { clip-path: inset(0 100% 0 0); opacity: 0; }\n    100% { clip-path: inset(0 0 0 0); opacity: 1; }\n}
+        @keyframes ekgTrace {
+            0% { 
+                clip-path: inset(0 100% 0 0); 
+                opacity: 0;}
 
 100% { 
                 clip-path: inset(0 0 0 0);
@@ -120,11 +123,11 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
 /* Existing style cleanups */
         .bg-green-100 { background: rgba(34, 197, 94, 0.15) !important;}
 
-.text-green-700, .text-green-500 { color: var(--color-success) !important;}
+.text-green-700, .text-green-500 { color: #4ade80 !important;}
 
 .bg-red-100 { background: rgba(239, 68, 68, 0.15) !important;}
 
-.text-red-700, .text-red-500 { color: var(--color-error) !important;}
+.text-red-700, .text-red-500 { color: #f87171 !important;}
 
 /* Sidebar New Style (CodePen Replicated) */
         #mobile-sidebar {
@@ -172,7 +175,7 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
             transform: translateY(-50%) scaleY(0);
             width: 3px;
             height: 60%;
-            background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            background: linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%);
             border-radius: 0 4px 4px 0;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);}
 
@@ -207,7 +210,7 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
             flex-shrink: 0;}
 
 .tab-btn.active .tab-icon {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
             border-color: transparent;
             box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.3);}
 
@@ -262,9 +265,9 @@ h1, h2, h3, h4, h5, h6, .font-display, .panel-title {
 
 /* Input styling */
         input, select, textarea {
-            background: var(--bg-dark) !important;
-            border-color: rgba(var(--color-white-rgb), 0.08) !important;
-            color: var(--text-main) !important;
+            background: #12121e !important;
+            border-color: rgba(var(--color-white-rgb),0.08) !important;
+            color: #e2e8f0 !important;
             transition: all 0.2s ease;}
 
 input:focus, select:focus, textarea:focus {
@@ -273,25 +276,26 @@ input:focus, select:focus, textarea:focus {
 
 /* Bottom mobile nav */
         .fixed.bottom-11, .fixed.bottom-0 {
-            background: var(--bg-darker) !important;
-            border-top: 1px solid rgba(var(--color-white-rgb), 0.04) !important;}
+            background: #0d0d16 !important;
+            border-top: 1px solid rgba(var(--color-white-rgb),0.04) !important;}
 
 /* SVG Circle timer - purple glow */
         svg circle.text-\[var(--color-primary-light)\] {
-            stroke: var(--color-primary) !important;}
+            stroke: #7c3aed !important;}
 
 /* Cyan/water elements keep their identity but muted */
         .bg-cyan-500 {
-            background: var(--color-info) !important;
+            background: #06b6d4 !important;
             box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;}
 
 /* Chart bars */
         .bg-accent\/40 { background: rgba(var(--color-primary-rgb), 0.25) !important;}
 
-.bg-accent { background: var(--color-primary) !important;}
+.bg-accent { background: #7c3aed !important;}
 
 /* Animations */
-        @keyframes fadeInUp {\n    from { opacity: 0; transform: translateY(20px); }\n    to { opacity: 1; transform: translateY(0); }\n}
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px);}
 
 to { opacity: 1; transform: translateY(0); }}
 
@@ -303,9 +307,9 @@ main > .grid { animation-delay: 0.15s;}
 
 /* Protocol button cards */
         .protocol-btn {
-            background: var(--bg-surface) !important;
-            border-color: rgba(var(--color-white-rgb), 0.06) !important;
-            color: rgba(var(--color-white-rgb), 0.5) !important;}
+            background: #161622 !important;
+            border-color: rgba(var(--color-white-rgb),0.06) !important;
+            color: rgba(var(--color-white-rgb),0.5) !important;}
 
 .protocol-btn:hover {
             border-color: rgba(var(--color-primary-alt-rgb), 0.3) !important;}
@@ -326,7 +330,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Dark solid cards like Superconscious dashboard */
         .glass-panel {
-            background: var(--bg-surface) !important;
+            background: #161622 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             border: 1px solid rgba(var(--color-white-rgb), 0.06) !important;
@@ -355,7 +359,7 @@ button.bg-primary:hover,
             transform: translateY(-1px);}
 
 /* Timer circle glow (purple halo from screenshots) */
-        #dash-circle-progress, .text-[var(--color-primary-light)] {
+        #dash-circle-progress, .text-[#a78bfa] {
             filter: drop-shadow(0 0 8px rgba(var(--color-primary-rgb), 0.5));}
 
 /* Progress bars matching screenshots */
@@ -367,26 +371,26 @@ button.bg-primary:hover,
 
 /* Sidebar styling */
         #mobile-sidebar {
-            background: var(--bg-darker) !important;
-            border-right: 1px solid rgba(var(--color-white-rgb), 0.04) !important;}
+            background: #0d0d16 !important;
+            border-right: 1px solid rgba(var(--color-white-rgb),0.04) !important;}
 
 /* Nav links */
         #mobile-sidebar nav a {
-            color: rgba(var(--color-white-rgb), 0.45);
+            color: rgba(var(--color-white-rgb),0.45);
             transition: all 0.2s ease;
             border-radius: 0.75rem;}
 
 #mobile-sidebar nav a:hover {
-            color: rgba(var(--color-white-rgb), 0.8);
+            color: rgba(var(--color-white-rgb),0.8);
             background: rgba(var(--color-primary-alt-rgb), 0.08);}
 
 #mobile-sidebar nav a.bg-secondary\/10 {
             background: rgba(var(--color-primary-alt-rgb), 0.12) !important;
-            color: var(--color-primary-light) !important;}
+            color: #a78bfa !important;}
 
 /* SVG Circle timer - purple glow */
-        svg circle.text-\\[#a78bfa\\] {
-            stroke: var(--color-primary) !important;}
+        svg circle.text-[#a78bfa] {
+            stroke: #7c3aed !important;}
 
 /* Replicated Premium Dashboard Cards */
         .glass-panel {
@@ -416,7 +420,7 @@ button.bg-primary:hover,
         .stat-highlight {
             font-size: 1.65rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff 0%, var(--color-primary-light) 100%);
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -427,7 +431,10 @@ button.bg-primary:hover,
             text-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.4);}
 
 /* Smooth Left-to-Right Reveal Animation (Runs once on load) */
-        @keyframes ekgTrace {\n    0% { clip-path: inset(0 100% 0 0); opacity: 0; }\n    100% { clip-path: inset(0 0 0 0); opacity: 1; }\n}
+        @keyframes ekgTrace {
+            0% { 
+                clip-path: inset(0 100% 0 0); 
+                opacity: 0;}
 
 /* Progress bars */
         .progress-container {
@@ -439,7 +446,7 @@ button.bg-primary:hover,
 
 .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--color-primary) 0%, #d8b4fe 100%);
+            background: linear-gradient(90deg, #7c3aed 0%, #d8b4fe 100%);
             border-radius: 10px;
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -449,7 +456,7 @@ button.bg-primary:hover,
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(var(--color-white-rgb), 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(var(--color-white-rgb),0.2), transparent);
             transform: translateX(-100%);
             animation: shimmer 2s infinite;}
 
@@ -478,7 +485,8 @@ button.bg-primary:hover,
 .dropdown-content.show {
             display: block;}
 
-@keyframes fadeIn {\n    from { opacity: 0; transform: translateY(-5px); }\n    to { opacity: 1; transform: translateY(0); }\n}
+@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px);}
 
 /* Mini-chart styling */
         .mini-chart-bar {
@@ -501,7 +509,7 @@ button.bg-primary:hover,
         .stat-highlight {
             font-size: 2.2rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff 0%, var(--color-primary-light) 100%);
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -582,7 +590,8 @@ to { opacity: 1; }}
 .animate-fade-in {
             animation: fadeIn 0.8s ease-out both;}
 
-@keyframes fadeInUp {\n    from { opacity: 0; transform: translateY(20px); }\n    to { opacity: 1; transform: translateY(0); }\n}
+@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px);}
 
 main > header, main > .grid {
             animation: fadeInUp 0.5s ease-out both;}
