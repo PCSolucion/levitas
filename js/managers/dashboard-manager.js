@@ -7,6 +7,7 @@ import { checkAndNotifyAchievements } from "./achievements-manager.js";
 export class DashboardManager {
     constructor(uid) {
         this.uid = uid;
+        this.unsubscribers = [];
         this.timerInterval = null;
         
         // Fasting Card Elements
@@ -75,7 +76,7 @@ export class DashboardManager {
 
     initWeightMiniChart() {
         const q = query(collection(db, "weights"), where("uid", "==", this.uid));
-        onSnapshot(q, (snap) => {
+        const unsub = onSnapshot(q, (snap) => {
             const chartLine = document.getElementById("chart-line");
             const chartArea = document.getElementById("chart-area");
             if (!chartLine || !chartArea) return;
@@ -124,6 +125,7 @@ export class DashboardManager {
             chartLine.setAttribute("d", pathData);
             chartArea.setAttribute("d", `${pathData} L ${width},${height} L 0,${height} Z`);
         });
+        this.unsubscribers.push(unsub);
     }
 
     updateTimer(startTime, goalHours) {
@@ -171,7 +173,7 @@ export class DashboardManager {
         const qFasts = query(collection(db, "fasts"), where("uid", "==", this.uid));
         let allFasts = [];
 
-        onSnapshot(qFasts, (fastsSnap) => {
+        const unsubFasts = onSnapshot(qFasts, (fastsSnap) => {
             allFasts = fastsSnap.docs.sort((a, b) => {
                 const ta = a.data().startTime?.toMillis ? a.data().startTime.toMillis() : new Date(a.data().startTime).getTime();
                 const tb = b.data().startTime?.toMillis ? b.data().startTime.toMillis() : new Date(b.data().startTime).getTime();
@@ -190,12 +192,14 @@ export class DashboardManager {
                 }
             });
         });
+        this.unsubscribers.push(unsubFasts);
 
-        UserService.onProfileChange(this.uid, (data) => {
+        const unsubProfile = UserService.onProfileChange(this.uid, (data) => {
             if (data) {
                 this.updateFastCardUI(data, allFasts);
             }
         });
+        this.unsubscribers.push(unsubProfile);
     }
 
     updateFastCardUI(userData, allFasts) {
@@ -278,7 +282,7 @@ export class DashboardManager {
         const qWeights = query(collection(db, "weights"), where("uid", "==", this.uid));
         const qWater = query(collection(db, "waterLogs"), where("uid", "==", this.uid));
 
-        onSnapshot(qFasts, async (fastsSnap) => {
+        const unsubActivity = onSnapshot(qFasts, async (fastsSnap) => {
             const weightsSnap = await getDocs(qWeights);
             const waterSnap = await getDocs(qWater);
 
@@ -379,10 +383,11 @@ export class DashboardManager {
                 wrapper.appendChild(dayCol);
             }
         });
+        this.unsubscribers.push(unsubActivity);
     }
 
     initStats() {
-        UserService.onProfileChange(this.uid, (data) => {
+        const unsubStats = UserService.onProfileChange(this.uid, (data) => {
             if (data) {
                 if (this.statWeight && !this.statWeight.innerText.includes(".")) { // Only if not updated by WeightManager yet
                      this.statWeight.innerText = data.currentWeight || data.startingWeight || "--";
@@ -390,6 +395,7 @@ export class DashboardManager {
                 if (this.statTargetWeight) this.statTargetWeight.innerText = data.targetWeight || "--";
             }
         });
+        this.unsubscribers.push(unsubStats);
     }
 
     initNotifications() {
@@ -399,7 +405,7 @@ export class DashboardManager {
             limit(10)
         );
 
-        onSnapshot(q, (snapshot) => {
+        const unsubNotif = onSnapshot(q, (snapshot) => {
             if (!this.notifList) return;
             
             const markAllBtn = document.getElementById("mark-all-read");
@@ -477,5 +483,12 @@ export class DashboardManager {
                 }
             }
         });
+        this.unsubscribers.push(unsubNotif);
+    }
+
+    destroy() {
+        this.unsubscribers.forEach(unsub => unsub && unsub());
+        this.unsubscribers = [];
+        if (this.timerInterval) clearInterval(this.timerInterval);
     }
 }

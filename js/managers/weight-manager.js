@@ -5,6 +5,7 @@ import { checkAndNotifyAchievements } from "./achievements-manager.js";
 export class WeightManager {
     constructor(uid) {
         this.uid = uid;
+        this.unsubscribers = [];
         this.currentGoals = null;
         this.lastWeightsSnap = null;
 
@@ -19,14 +20,9 @@ export class WeightManager {
     init() {
         if (!this.uid) return;
 
-        UserService.onProfileChange(this.uid, (data) => {
+        const unsubProfile = UserService.onProfileChange(this.uid, (data) => {
             if (data) {
                 this.currentGoals = data;
-                
-                // Track historical records
-                UserService.onWeightHistoryChange(this.uid, (weights, snap) => {
-                    this.updateWeightUI(weights, snap);
-                });
 
                 // Set up UI actions
                 if (this.btnRegWeight) {
@@ -36,6 +32,13 @@ export class WeightManager {
                 this.checkGoalAchievement();
             }
         });
+
+        // Track historical records (separated to avoid nested listener leaks)
+        const unsubHistory = UserService.onWeightHistoryChange(this.uid, (weights, snap) => {
+            this.updateWeightUI(weights, snap);
+        });
+
+        this.unsubscribers.push(unsubProfile, unsubHistory);
     }
 
     updateWeightUI(weights, snap) {
@@ -229,5 +232,10 @@ export class WeightManager {
                     });
             }
         }
+    }
+
+    destroy() {
+        this.unsubscribers.forEach(unsub => unsub && unsub());
+        this.unsubscribers = [];
     }
 }

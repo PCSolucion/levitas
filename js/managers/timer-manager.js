@@ -8,6 +8,7 @@ import { showPrompt, showConfirm, showAlert } from "../utils/modals.js";
 export class TimerManager {
     constructor(uid) {
         this.uid = uid;
+        this.unsubscribers = [];
         this.timerInterval = null;
         this.localIsFasting = false;
         this.localStartTime = null;
@@ -89,7 +90,7 @@ export class TimerManager {
     }
 
     listenToUserDoc() {
-        UserService.onProfileChange(this.uid, (data) => {
+        const unsub = UserService.onProfileChange(this.uid, (data) => {
             if (data) {
                 if (data.fastingProtocol) this.defaultProtocol = data.fastingProtocol;
                 
@@ -162,6 +163,7 @@ export class TimerManager {
                 }
             }
         });
+        this.unsubscribers.push(unsub);
     }
 
     updateTimerUI(startTime, goalHours) {
@@ -532,7 +534,7 @@ export class TimerManager {
 
     loadRecentFasts() {
         const q = query(collection(db, "fasts"), where("uid", "==", this.uid));
-        onSnapshot(q, (snapshot) => {
+        const unsub = onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
                 if(this.recentFastsContainer) this.recentFastsContainer.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Aún no hay ayunos.</p>';
                 this.personalBestHours = 0;
@@ -574,6 +576,7 @@ export class TimerManager {
                 this.renderFastsList();
             }
         });
+        this.unsubscribers.push(unsub);
     }
 
     renderTabs() {
@@ -617,58 +620,65 @@ export class TimerManager {
 
     renderFastsList() {
         if (!this.recentFastsContainer) return;
-        this.recentFastsContainer.innerHTML = "";
         const fasts = (this.groupedFasts[this.selectedYear] && this.groupedFasts[this.selectedYear][this.selectedMonth]) || [];
         if (fasts.length === 0) {
             this.recentFastsContainer.innerHTML = '<p class="col-span-full text-center text-xs text-slate-500 py-8">No hay registros.</p>';
             return;
         }
 
+        let htmlString = "";
+
         fasts.forEach(fast => {
             const data = fast.data;
             const id = fast.id;
             const startDate = data.startTime?.toDate ? data.startTime.toDate() : new Date(data.startTime);
             const dateStr = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            const fastItem = document.createElement("div");
-            fastItem.className = "bg-white/[0.02] border border-white/5 p-5 rounded-2xl hover:bg-white/[0.05] transition-all group relative overflow-hidden";
             const successColor = data.success ? 'emerald' : 'orange';
             const icon = data.success ? 'check_circle' : 'cancel';
 
-            fastItem.innerHTML = `
-                <div class="flex flex-col gap-4 relative z-10">
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-center gap-3">
-                            <div class="premium-icon-box !size-8 !bg-${successColor}-500/10 !text-${successColor}-500 !border-${successColor}-500/20">
-                                <span class="material-symbols-outlined text-base">${icon}</span>
+            htmlString += `
+                <div class="bg-white/[0.02] border border-white/5 p-5 rounded-2xl hover:bg-white/[0.05] transition-all group relative overflow-hidden">
+                    <div class="flex flex-col gap-4 relative z-10">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <div class="premium-icon-box !size-8 !bg-${successColor}-500/10 !text-${successColor}-500 !border-${successColor}-500/20">
+                                    <span class="material-symbols-outlined text-base">${icon}</span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <h4 class="text-[11px] font-black text-white uppercase tracking-widest">Protocolo ${data.protocol}</h4>
+                                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">${dateStr}</span>
+                                </div>
                             </div>
-                            <div class="flex flex-col">
-                                <h4 class="text-[11px] font-black text-white uppercase tracking-widest">Protocolo ${data.protocol}</h4>
-                                <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">${dateStr}</span>
+                            <div class="flex items-center gap-3">
+                                <div class="flex flex-col items-end">
+                                    <span class="text-lg font-black text-white leading-none">${data.actualHours}<span class="text-[10px] text-slate-500 ml-0.5">h</span></span>
+                                    <span class="text-[8px] font-black ${data.success ? 'text-emerald-500' : 'text-orange-500'} uppercase tracking-widest">${data.success ? 'Completado' : 'Interrumpido'}</span>
+                                </div>
+                                <button class="size-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all btn-delete-fast" data-id="${id}">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="flex flex-col items-end">
-                                <span class="text-lg font-black text-white leading-none">${data.actualHours}<span class="text-[10px] text-slate-500 ml-0.5">h</span></span>
-                                <span class="text-[8px] font-black ${data.success ? 'text-emerald-500' : 'text-orange-500'} uppercase tracking-widest">${data.success ? 'Completado' : 'Interrumpido'}</span>
-                            </div>
-                            <button class="size-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all btn-delete-fast" data-id="${id}">
-                                <span class="material-symbols-outlined text-base">delete</span>
-                            </button>
+                        <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-${successColor}-500 transition-all duration-1000" style="width: ${Math.min(100, (data.actualHours / data.goalHours) * 100)}%"></div>
                         </div>
-                    </div>
-                    <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div class="h-full bg-${successColor}-500 transition-all duration-1000" style="width: ${Math.min(100, (data.actualHours / data.goalHours) * 100)}%"></div>
                     </div>
                 </div>
             `;
-            fastItem.querySelector(".btn-delete-fast").onclick = async (e) => {
+        });
+
+        this.recentFastsContainer.innerHTML = htmlString;
+
+        // Batch event listeners
+        this.recentFastsContainer.querySelectorAll(".btn-delete-fast").forEach(btn => {
+            btn.onclick = async (e) => {
                 e.stopPropagation();
+                const id = btn.getAttribute("data-id");
                 if (await showConfirm("Eliminar ayuno", "¿Estás seguro?")) {
                     try { await deleteDoc(doc(db, "fasts", id)); }
                     catch (err) { showAlert("Error", "Error al eliminar: " + err.message, "error"); }
                 }
             };
-            this.recentFastsContainer.appendChild(fastItem);
         });
     }
 
@@ -683,5 +693,11 @@ export class TimerManager {
                 card.querySelector(".protocol-badge")?.classList.add("hidden");
             }
         });
+    }
+
+    destroy() {
+        this.unsubscribers.forEach(unsub => unsub && unsub());
+        this.unsubscribers = [];
+        if (this.timerInterval) clearInterval(this.timerInterval);
     }
 }
