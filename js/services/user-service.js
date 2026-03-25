@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc, addDoc, collection, serverTimestamp, onSnapshot, query, where, orderBy, limit, getDocs } from "firebase/firestore";
-import { db } from "./firebase-config.js";
+import { db } from "../config/firebase-config.js";
 
 export class UserService {
     /**

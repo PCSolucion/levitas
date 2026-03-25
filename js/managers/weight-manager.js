@@ -1,5 +1,5 @@
-import { UserService } from "./user-service.js";
-import { showAlert, showConfirm, showPrompt } from "./modals.js";
+import { UserService } from "../services/user-service.js";
+import { showAlert, showConfirm, showPrompt } from "../utils/modals.js";
 import { checkAndNotifyAchievements } from "./achievements-manager.js";
 
 export class WeightManager {

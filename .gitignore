@@ -1,5 +1,5 @@
 # Firebase configuration
-firebase-config.js
+js/config/firebase-config.js
 levitas.zip
 .agents/
 .htaccess

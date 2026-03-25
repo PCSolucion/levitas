@@ -1,7 +1,7 @@
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, setDoc, getDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebase-config.js";
-import { FastingService } from "./fasting-service.js";
-import { UserService } from "./user-service.js";
+import { db } from "../config/firebase-config.js";
+import { FastingService } from "../services/fasting-service.js";
+import { UserService } from "../services/user-service.js";
 import { checkAndNotifyAchievements } from "./achievements-manager.js";
 
 export class DashboardManager {

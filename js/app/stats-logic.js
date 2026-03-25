@@ -1,11 +1,11 @@
-import { auth } from "./firebase-config.js";
+import { auth } from "../config/firebase-config.js";
 import { onAuthStateChanged } from "firebase/auth";
-import { BadgesManager } from "./badges-manager.js";
+import { StatsManager } from "../managers/stats-manager.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            new BadgesManager(user.uid).init();
+            new StatsManager(user.uid);
         } else {
             window.location.href = "login.html";
         }

@@ -1,9 +1,9 @@
 import { collection, addDoc, query, where, serverTimestamp, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
-import { db } from "./firebase-config.js";
-import { FastingService } from "./fasting-service.js";
-import { UserService } from "./user-service.js";
+import { db } from "../config/firebase-config.js";
+import { FastingService } from "../services/fasting-service.js";
+import { UserService } from "../services/user-service.js";
 import { checkAndNotifyAchievements } from "./achievements-manager.js";
-import { showPrompt, showConfirm, showAlert } from "./modals.js";
+import { showPrompt, showConfirm, showAlert } from "../utils/modals.js";
 
 export class TimerManager {
     constructor(uid) {

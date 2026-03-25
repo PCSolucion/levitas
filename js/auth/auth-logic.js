@@ -1,4 +1,4 @@
-import { auth, provider, db } from "./firebase-config.js";
+import { auth, provider, db } from "../config/firebase-config.js";
 import { 
     signInWithPopup, 
     onAuthStateChanged

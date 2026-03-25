@@ -1,7 +1,7 @@
 import { collection, query, where, orderBy, limit, onSnapshot, addDoc, serverTimestamp, getDocs, doc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { db, auth } from "./firebase-config.js";
-import { showPrompt, showConfirm, showAlert } from "./modals.js";
+import { db, auth } from "../config/firebase-config.js";
+import { showPrompt, showConfirm, showAlert } from "../utils/modals.js";
 document.addEventListener("DOMContentLoaded", () => {
     let currentUser = null;
     let heightCm = 175;

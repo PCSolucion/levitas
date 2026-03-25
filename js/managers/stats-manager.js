@@ -1,5 +1,5 @@
-import { UserService } from "./user-service.js";
-import { FastingService } from "./fasting-service.js";
+import { UserService } from "../services/user-service.js";
+import { FastingService } from "../services/fasting-service.js";
 import { badges, calculateStats } from "./achievements-manager.js";
 
 export class StatsManager {

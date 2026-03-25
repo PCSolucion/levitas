@@ -1,11 +1,11 @@
-import { auth } from "./firebase-config.js";
 import { onAuthStateChanged } from "firebase/auth";
-import { StatsManager } from "./stats-manager.js";
+import { auth } from "../config/firebase-config.js";
+import { TimerManager } from "../managers/timer-manager.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            new StatsManager(user.uid);
+            new TimerManager(user.uid).init();
         } else {
             window.location.href = "login.html";
         }

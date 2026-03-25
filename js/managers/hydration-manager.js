@@ -1,7 +1,7 @@
-import { UserService } from "./user-service.js";
+import { UserService } from "../services/user-service.js";
 import { checkAndNotifyAchievements } from "./achievements-manager.js";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase-config.js";
+import { db } from "../config/firebase-config.js";
 
 export class HydrationManager {
     constructor(uid) {
